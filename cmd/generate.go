@@ -64,10 +64,11 @@ to quickly create a Cobra application.`,
 
 			case 1:
 				fmt.Printf("%v\n", "Controller action")
-				fmt.Printf("%v\n", args)
+				ControllerGenerator(args)
 			case 2:
 				fmt.Printf("%v\n", "Scaffold action")
-				fmt.Printf("%v\n", args)
+				ModelGenerator(args)
+				ControllerGenerator(args)
 			case 3:
 				fmt.Printf("%v\n", "View action")
 				fmt.Printf("%v\n", args)
