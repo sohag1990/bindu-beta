@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bindu-bindu/bindu/cmd/helper"
 	"github.com/manifoldco/promptui"
-	"github.com/sohag1990/bindu/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
@@ -175,6 +175,7 @@ func createNewApp(appName string) {
 	os.Rename(UserInputs["APP_NAME"], UserInputs["APP_NAME"]+time.Now().String())
 	cmd := exec.Command("git", "clone", appSelected.UrlHTTPS)
 	errD := cmd.Run()
+	// fmt.Println(errD)
 	helper.ErrorCheck(errD)
 	errRename := os.Rename(appSelected.Name, UserInputs["APP_NAME"])
 	helper.ErrorCheck(errRename)

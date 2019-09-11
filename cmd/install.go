@@ -20,7 +20,7 @@ import (
 	"net"
 	"os/exec"
 
-	"github.com/sohag1990/bindu/cmd/helper"
+	"github.com/bindu-bindu/bindu/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
@@ -35,6 +35,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		helper.IsInProjectDir()
 		fmt.Println("checking internet connection....")
 		_, err := net.Dial("tcp", "github.com:443")
 		helper.ErrorCheck(err)

@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/sohag1990/bindu/cmd"
+import "github.com/bindu-bindu/bindu/cmd"
 
 func main() {
 	cmd.Execute()

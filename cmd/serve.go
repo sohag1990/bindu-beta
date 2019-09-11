@@ -18,6 +18,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/bindu-bindu/bindu/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
@@ -32,6 +33,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		helper.IsInProjectDir()
 		fmt.Println("serve called")
 		p, _ := cmd.Flags().GetString("port")
 		if p == "" {

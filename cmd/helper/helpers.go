@@ -2,6 +2,7 @@ package helper
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -45,7 +46,7 @@ func SanitizeUserInputReArry(args []string) []string {
 
 	}
 	// if missing arg name: suppose to missing Model/Controller/Scafforl/View Name just promt user to input the name
-	if len(reArray) > 2 && strings.Contains(reArray[1], ":") {
+	if (len(reArray) > 2 && strings.Contains(reArray[1], ":")) || len(reArray) == 1 {
 		fmt.Printf("%v\n", "Forgot to enter")
 		promptArgName := promptui.Prompt{
 			Label:    reArray[0] + " Name",
@@ -66,6 +67,15 @@ func SanitizeUserInputReArry(args []string) []string {
 // ErrorCheck if error the panic
 func ErrorCheck(e error) {
 	if e != nil {
+		fmt.Println(e)
 		panic(e)
+	}
+}
+
+// IsInProjectDir if run command outside the project directory
+func IsInProjectDir() {
+	if _, err := os.Stat("./.env"); os.IsNotExist(err) {
+		fmt.Println("You are not in project directory")
+		ErrorCheck(err)
 	}
 }

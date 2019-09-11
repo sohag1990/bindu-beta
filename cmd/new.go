@@ -18,7 +18,7 @@ package cmd
 import (
 	"strings"
 
-	"github.com/sohag1990/bindu/cmd/newActions"
+	"github.com/bindu-bindu/bindu/cmd/newActions"
 
 	"github.com/spf13/cobra"
 )

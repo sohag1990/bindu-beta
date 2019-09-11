@@ -18,8 +18,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/bindu-bindu/bindu/cmd/helper"
 	"github.com/manifoldco/promptui"
-	"github.com/sohag1990/bindu/cmd/helper"
 	"github.com/spf13/cobra"
 )
 
@@ -34,10 +34,10 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
+		helper.IsInProjectDir()
 		// sanitize user args array
 		args = helper.SanitizeUserInputReArry(args)
-		fmt.Printf("%v\n", args)
+		// fmt.Printf("%v\n", args)
 
 		genItems := []string{"Model", "Controller", "Scaffold", "View"}
 		// fmt.Printf("%v", args)
