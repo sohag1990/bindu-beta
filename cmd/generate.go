@@ -17,6 +17,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/bindu-bindu/bindu/cmd/helper"
 	"github.com/manifoldco/promptui"
@@ -58,7 +60,7 @@ to quickly create a Cobra application.`,
 			switch i {
 			case 0:
 				fmt.Printf("%v\n", "Model action")
-				fmt.Printf("Full %v\n", args)
+				ModelGenerator(args)
 
 			case 1:
 				fmt.Printf("%v\n", "Controller action")
@@ -94,8 +96,18 @@ func init() {
 	// generateCmd.Flags().StringP("controller", "c", "", "Enter new controller name")
 }
 
-// func check(e error) {
-// 	if e != nil {
-// 		panic(e)
-// 	}
-// }
+// ModelGenerator to generate the model in project using the user inputs
+func ModelGenerator(args []string) {
+	fmt.Println(args)
+	if len(args) == 2 {
+		fmt.Println("Initializing empty Model " + args[1])
+		newpath := filepath.Join(".", "app/models")
+		os.MkdirAll(newpath, os.ModePerm)
+		f, err := os.Create("./app/models/" + args[1] + ".go")
+		helper.ErrorCheck(err)
+		f.WriteString("package model\n")
+		defer f.Close()
+		absPath, _ := filepath.Abs(newpath)
+		fmt.Println(absPath + "/" + args[1] + ".go")
+	}
+}

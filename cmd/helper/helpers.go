@@ -56,7 +56,7 @@ func SanitizeUserInputReArry(args []string) []string {
 		ErrorCheck(err)
 		var newArray []string
 		newArray = append(newArray, reArray[0])
-		newArray = append(newArray, argName)
+		newArray = append(newArray, strings.Title(argName))
 		newArray = append(newArray, reArray[1:]...)
 		reArray = newArray
 	}
@@ -79,3 +79,5 @@ func IsInProjectDir() {
 		ErrorCheck(err)
 	}
 }
+
+// letter fix if someone inside project directory and want to create a new project
