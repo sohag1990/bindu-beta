@@ -61,7 +61,28 @@ func SanitizeUserInputReArry(args []string) []string {
 		reArray = newArray
 	}
 
-	return reArray
+	return CleanEmptyArray(reArray)
+}
+
+// CleanEmptyArray Remove empty item from array
+func CleanEmptyArray(s []string) []string {
+	var r []string
+	for _, str := range s {
+		if str != "" {
+			r = append(r, str)
+		}
+	}
+	return r
+}
+
+// PropertyFormatter formate the correct property and type
+func PropertyFormatter(prop string) string {
+	p := strings.Split(prop, ":")
+	if len(p) >= 2 {
+		return p[0] + "\t\t" + strings.ToLower(p[1])
+	}
+
+	return ""
 }
 
 // ErrorCheck if error the panic
