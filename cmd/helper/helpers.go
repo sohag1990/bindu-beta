@@ -189,7 +189,7 @@ func FixImportPath(oldImportPath string, newImportPath string) {
 			if info.IsDir() && info.Name() == ".git" {
 				return filepath.SkipDir
 			}
-			fmt.Println(path, info.Size())
+			// fmt.Println(path, info.Size())
 			// if extenstion .go then read file and find old import path and replace new import path
 			if strings.Contains(path, ".go") {
 				lines, err := scanLines(path)
@@ -201,7 +201,7 @@ func FixImportPath(oldImportPath string, newImportPath string) {
 						read, err := ioutil.ReadFile(path)
 						ErrorCheck(err)
 						newContents := strings.Replace(string(read), oldImportPath, newImportPath, -1)
-						fmt.Println(newContents)
+						// fmt.Println(newContents)
 						err = ioutil.WriteFile(path, []byte(newContents), 0)
 						ErrorCheck(err)
 					}
