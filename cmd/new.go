@@ -16,8 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	"strings"
-
+	"github.com/bindu-bindu/bindu/cmd/helper"
 	"github.com/bindu-bindu/bindu/cmd/newActions"
 
 	"github.com/spf13/cobra"
@@ -29,7 +28,8 @@ var newCmd = &cobra.Command{
 	Short: "Create new project by given projectName",
 	Long:  `Generate a new project using given projectName`,
 	Run: func(cmd *cobra.Command, args []string) {
-		newActions.Init(cmd, strings.Join(args, " "))
+		args = helper.SanitizeUserInput(args)
+		newActions.Init(cmd, args)
 	},
 }
 

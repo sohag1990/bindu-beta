@@ -32,6 +32,10 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// need to work on this command like : bindu fix path then oldpath  and new path lots of work
+		// there is bug fix should be automated.
+		// App_IMPort path should be automated not picked form env
+		// fix korar shomoy jodi .env import path different hoy then env backup hoya notun path shoho env create hobe
+		// New project create korar shomoy full dirrectory name match na korleo rename hoy jacce should be fix
 		theImportPath := helper.GetEnvValueByKey(".env", "APP_IMPORT_PATH")
 		helper.FixImportPath("github.com/bindu-bindu/bindu-blank/", theImportPath+"/")
 	},

@@ -5,9 +5,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/bindu-bindu/bindu/cmd/helper"
@@ -16,8 +14,13 @@ import (
 )
 
 // Init New project create proccess
-func Init(cmd *cobra.Command, arg string) {
-	createNewApp(makeAppName(arg))
+func Init(cmd *cobra.Command, args []string) {
+	// fmt.Println(len(args))
+	appName := ""
+	if len(args) > 0 {
+		appName = args[0]
+	}
+	createNewApp(helper.MakeAppName(appName))
 }
 func createNewApp(appName string) {
 	// ENV VARIABLES START
@@ -43,8 +46,12 @@ func createNewApp(appName string) {
 		}
 		aName, err := promptAppName.Run()
 		helper.ErrorCheck(err)
-		UserInputs["APP_NAME"] = makeAppName(aName)
-		envApp.APP_NAME = makeAppName(aName)
+		UserInputs["APP_NAME"] = helper.MakeAppName(aName)
+		envApp.APP_NAME = helper.MakeAppName(aName)
+		envApp.APP_IMPORT_PATH = helper.AppImportPath(envApp.APP_NAME)
+	} else {
+		UserInputs["APP_NAME"] = appName
+		envApp.APP_NAME = appName
 		envApp.APP_IMPORT_PATH = helper.AppImportPath(envApp.APP_NAME)
 	}
 	type preBuiltApp struct {
@@ -77,8 +84,8 @@ func createNewApp(appName string) {
 	}
 
 	preSelectedIndex, result, err := promptPreBuiltApp.Run()
-	UserInputs["PRE_BUILT_APP"] = makeAppName(result)
-	envApp.APP_PREBUILT = makeAppName(result)
+	UserInputs["PRE_BUILT_APP"] = helper.MakeAppName(result)
+	envApp.APP_PREBUILT = helper.MakeAppName(result)
 	helper.ErrorCheck(err)
 	// the last item
 	if preSelectedIndex == len(preBuiltApps)-1 {
@@ -98,7 +105,7 @@ func createNewApp(appName string) {
 			Items: []string{"Sqlite", "Mysql", "PGSql", "MongoDB", "Oracle", "None"},
 		}
 		_, dbAdapterName, err := promtDbAdapter.Run()
-		UserInputs["DATABASE_ADAPTER"] = makeAppName(dbAdapterName)
+		UserInputs["DATABASE_ADAPTER"] = helper.MakeAppName(dbAdapterName)
 		envDbMysql.MYSQL_DB_CONNECTION = true
 		if dbAdapterName == "None" {
 			fmt.Println("I will set database manually")
@@ -250,13 +257,6 @@ func createNewApp(appName string) {
 	// 	i++
 	// }
 
-}
-
-func makeAppName(arg string) string {
-	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
-	helper.ErrorCheck(err)
-	appName := reg.ReplaceAllString(arg, "")
-	return strings.Trim(appName, "")
 }
 
 type ENV_APP struct {

@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os/exec"
 
 	"github.com/bindu-bindu/bindu/cmd/helper"
 	"github.com/spf13/cobra"
@@ -34,15 +35,29 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		helper.IsInProjectDir()
-		fmt.Println("serve called")
+		fmt.Println("Bindu server running on:")
 		p, _ := cmd.Flags().GetString("port")
 		if p == "" {
-			p = "8888"
+			p = "8080"
 		}
-		fmt.Println("Port " + p)
+		fmt.Println("localhost:" + p)
+		serverRun()
 	},
 }
 
+func serverRun() {
+	dependencyCmd := exec.Command("go", "get")
+	err := dependencyCmd.Run()
+	helper.ErrorCheck(err)
+	serverRunCMD := exec.Command("go", "run", "Server.go")
+	err = serverRunCMD.Run()
+	helper.ErrorCheck(err)
+
+	serverRunCMD = exec.Command("Hello")
+	err = serverRunCMD.Run()
+	helper.ErrorCheck(err)
+
+}
 func init() {
 	rootCmd.AddCommand(serveCmd)
 	// Here you will define your flags and configuration settings.

@@ -9,8 +9,10 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 
+	pluralize "github.com/gertd/go-pluralize"
 	"github.com/manifoldco/promptui"
 )
 
@@ -69,6 +71,47 @@ func SanitizeUserInputReArry(args []string) []string {
 	return CleanEmptyArray(reArray)
 }
 
+// SanitizeUserInput to sanitize user input for generate command:
+//  sometime user will input with comma sometime without comma or vice varsa.
+// args passed make them formated upppercase
+func SanitizeUserInput(args []string) []string {
+	var reArray []string
+
+	var j int
+	for _, arg := range args {
+
+		commaSepToArray := strings.Split(arg, ",")
+		// fmt.Println(len(commaSepToArray))
+		if len(commaSepToArray) > 1 {
+			for _, cItem := range commaSepToArray {
+				reArray = append(reArray, strings.Title(cItem))
+				j++
+			}
+		} else {
+			reArray = append(reArray, strings.Title(arg))
+			j++
+		}
+
+	}
+	// // if missing arg name: suppose to missing Model/Controller/Scafforl/View Name just promt user to input the name
+	// if (len(reArray) > 2 && strings.Contains(reArray[1], ":")) || len(reArray) == 1 {
+	// 	fmt.Printf("%v\n", "Forgot to enter")
+	// 	promptArgName := promptui.Prompt{
+	// 		Label:    reArray[0] + " Name",
+	// 		Validate: nil,
+	// 	}
+	// 	argName, err := promptArgName.Run()
+	// 	ErrorCheck(err)
+	// 	var newArray []string
+	// 	newArray = append(newArray, reArray[0])
+	// 	newArray = append(newArray, strings.Title(argName))
+	// 	newArray = append(newArray, reArray[1:]...)
+	// 	reArray = newArray
+	// }
+
+	return CleanEmptyArray(reArray)
+}
+
 // CleanEmptyArray Remove empty item from array
 func CleanEmptyArray(s []string) []string {
 	var r []string
@@ -118,6 +161,14 @@ func IfThenElse(condition bool, a interface{}, b interface{}) interface{} {
 	return b
 }
 
+// MakeAppName to sanitize appName
+func MakeAppName(arg string) string {
+	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+	ErrorCheck(err)
+	appName := reg.ReplaceAllString(arg, "")
+	return strings.Trim(appName, "")
+}
+
 // AppImportPath Project import path generate
 func AppImportPath(appName string) string {
 	projectPath := strings.Replace(PWD(), build.Default.GOPATH+"/src/", "", -1)
@@ -155,6 +206,58 @@ func GetEnvValueByKey(path string, envKey string) string {
 		}
 	}
 	return ""
+}
+
+func WriteRoutes(path string, routeName string) {
+	lines, err := scanLines(path)
+	ErrorCheck(err)
+	var lineNumber int
+	var newLines []string
+	for i, line := range lines {
+
+		if strings.Contains(line, "func API") {
+			// fmt.Println("Hello")
+			lineNumber = i
+			newLines = append(newLines, lines[:i+1]...)
+			newLines = append(newLines, "\n")
+			type route struct {
+				key   string
+				value string
+			}
+			routes := []route{
+				{key: "GET", value: "Index"},
+				{key: "POST", value: "Create"},
+				{key: "GET", value: "Show"},
+				{key: "PUT", value: "Update"},
+				{key: "DELETE", value: "Destroy"},
+			}
+			for _, r := range routes {
+				plural := pluralize.NewClient()
+				switch r.value {
+				case "Index":
+					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(plural.Plural(routeName))+"\", controllers."+r.value+routeName+")")
+				case "Create":
+					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(plural.Plural(routeName))+"/:id\", controllers."+r.value+routeName+")")
+
+				case "Show":
+					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(plural.Plural(routeName))+"/:id\", controllers."+r.value+routeName+")")
+
+				case "Update":
+					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(plural.Plural(routeName))+"/\", controllers."+r.value+routeName+")")
+				case "Destroy":
+					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(plural.Plural(routeName))+"/:id\", controllers."+r.value+routeName+")")
+
+				}
+			}
+
+		}
+	}
+
+	if lineNumber > 0 {
+		newLines = append(newLines, lines[lineNumber+1:]...)
+		ioutil.WriteFile(path, []byte(strings.Join(newLines, "\n")), 0644)
+	}
+
 }
 
 func scanLines(path string) ([]string, error) {

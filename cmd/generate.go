@@ -66,9 +66,10 @@ to quickly create a Cobra application.`,
 				fmt.Printf("%v\n", "Controller action")
 				ControllerGenerator(args)
 			case 2:
-				fmt.Printf("%v\n", "Scaffold action")
+				// fmt.Printf("%v\n", "Scaffold action")
 				ModelGenerator(args)
 				ControllerGenerator(args)
+				RoutesGenerator(args)
 			case 3:
 				fmt.Printf("%v\n", "View action")
 				fmt.Printf("%v\n", args)
@@ -99,7 +100,7 @@ func init() {
 
 // ModelGenerator to generate the model in project using the user inputs
 func ModelGenerator(args []string) {
-	fmt.Println(args)
+	// fmt.Println(args)
 
 	fmt.Println("Initializing Model " + args[1])
 	newpath := filepath.Join(".", "app/models")
@@ -123,7 +124,7 @@ func ModelGenerator(args []string) {
 
 // ControllerGenerator to generate the controller in project using the user inputs
 func ControllerGenerator(args []string) {
-	fmt.Println(args)
+	// fmt.Println(args)
 
 	fmt.Println("Initializing Controller " + args[1])
 	newpath := filepath.Join(".", "app/controllers")
@@ -137,35 +138,47 @@ func ControllerGenerator(args []string) {
 	// Get All Data for Index
 	f.WriteString("func Index" + args[1] + "(c *gin.Context) {\n")
 	// Controller functionality here
-	f.WriteString("\tc.JSON(200, \"Home page\")\n")
+	f.WriteString("\tc.JSON(200, \"" + args[1] + " Home page\")\n")
 	f.WriteString("}\n\n")
 
 	// Get Single Data for Show
 	f.WriteString("func Show" + args[1] + "(c *gin.Context) {\n")
 	// Controller functionality here
-	f.WriteString("\tc.JSON(200, \"Show page\")\n")
+	f.WriteString("\tc.JSON(200, \"" + args[1] + " Show page\")\n")
 	f.WriteString("}\n\n")
 
 	// Post Single Data for New
 	f.WriteString("func New" + args[1] + "(c *gin.Context) {\n")
 	// Controller functionality here
-	f.WriteString("\tc.JSON(200, \"New page\")\n")
+	f.WriteString("\tc.JSON(200, \"" + args[1] + " New page\")\n")
+	f.WriteString("}\n\n")
+
+	// Post Single Data for Create
+	f.WriteString("func Create" + args[1] + "(c *gin.Context) {\n")
+	// Controller functionality here
+	f.WriteString("\tc.JSON(200, \"" + args[1] + " Create page\")\n")
 	f.WriteString("}\n\n")
 
 	// Create New Data for Update
 	f.WriteString("func Update" + args[1] + "(c *gin.Context) {\n")
 	// Controller functionality here
-	f.WriteString("\tc.JSON(200, \"Update page\")\n")
+	f.WriteString("\tc.JSON(200, \" " + args[1] + " Update page\")\n")
 	f.WriteString("}\n\n")
 
 	// Get Single Data for Destroy
 	f.WriteString("func Destroy" + args[1] + "(c *gin.Context) {\n")
 	// Controller functionality here
-	f.WriteString("\tc.JSON(200, \"Destroy page\")\n")
+	f.WriteString("\tc.JSON(200, \"" + args[1] + " Destroy page\")\n")
 	f.WriteString("}\n\n")
 
 	defer f.Close()
 	absPath, _ := filepath.Abs(newpath)
-	fmt.Println(absPath + "/" + args[1] + "Controller.go")
+	fmt.Println(absPath + "/" + args[1] + "Controller.go\n")
 
+}
+
+// RoutesGenerator Routes generator
+func RoutesGenerator(args []string) {
+	// routes not working... it should do first, find the fucname and append lines before return
+	helper.WriteRoutes("routes/API.go", args[1])
 }
