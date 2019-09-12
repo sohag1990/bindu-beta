@@ -1,8 +1,13 @@
 package helper
 
 import (
+	"bufio"
 	"fmt"
+	"go/build"
+	"io/ioutil"
+	"log"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -102,3 +107,109 @@ func IsInProjectDir() {
 }
 
 // letter fix if someone inside project directory and want to create a new project
+//
+//
+
+// IfThenElse evaluates a condition, if true returns the first parameter otherwise the second
+func IfThenElse(condition bool, a interface{}, b interface{}) interface{} {
+	if condition {
+		return a
+	}
+	return b
+}
+
+// AppImportPath Project import path generate
+func AppImportPath(appName string) string {
+	projectPath := strings.Replace(PWD(), build.Default.GOPATH+"/src/", "", -1)
+	return projectPath + "/" + appName
+}
+
+// PWD get present working directory
+func PWD() string {
+	pwd, err := os.Getwd()
+	ErrorCheck(err)
+	return pwd
+}
+
+// CD change directory
+func CD(appName string) {
+	errCD := os.Chdir(filepath.Join(PWD(), appName))
+	ErrorCheck(errCD)
+}
+
+// GetEnvValueByKey Read Env file and find value by key
+func GetEnvValueByKey(path string, envKey string) string {
+	lines, err := scanLines(path)
+	if err != nil {
+		fmt.Println("File not found!")
+		panic(err)
+	}
+	for _, line := range lines {
+		if strings.Contains(line, envKey) {
+			// found the line
+			// get the value only
+			splitLine := strings.Split(line, "=")
+			value := splitLine[1]
+			// fmt.Println(line)
+			return value
+		}
+	}
+	return ""
+}
+
+func scanLines(path string) ([]string, error) {
+
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	scanner.Split(bufio.ScanLines)
+
+	var lines []string
+
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	return lines, nil
+}
+
+// FixImportPath fix import path when app migrate to new name or new host
+func FixImportPath(oldImportPath string, newImportPath string) {
+	err := filepath.Walk(".",
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() && info.Name() == ".git" {
+				return filepath.SkipDir
+			}
+			fmt.Println(path, info.Size())
+			// if extenstion .go then read file and find old import path and replace new import path
+			if strings.Contains(path, ".go") {
+				lines, err := scanLines(path)
+				ErrorCheck(err)
+				for _, line := range lines {
+					// fmt.Println(line)
+					if strings.Contains(line, oldImportPath) {
+						// found the line
+						read, err := ioutil.ReadFile(path)
+						ErrorCheck(err)
+						newContents := strings.Replace(string(read), oldImportPath, newImportPath, -1)
+						fmt.Println(newContents)
+						err = ioutil.WriteFile(path, []byte(newContents), 0)
+						ErrorCheck(err)
+					}
+				}
+			}
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
+}

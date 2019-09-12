@@ -5,7 +5,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -46,6 +45,7 @@ func createNewApp(appName string) {
 		helper.ErrorCheck(err)
 		UserInputs["APP_NAME"] = makeAppName(aName)
 		envApp.APP_NAME = makeAppName(aName)
+		envApp.APP_IMPORT_PATH = helper.AppImportPath(envApp.APP_NAME)
 	}
 	type preBuiltApp struct {
 		Label    string
@@ -172,31 +172,39 @@ func createNewApp(appName string) {
 	fmt.Println("Creating new project hold tight.")
 	appSelectedIndex, _ := strconv.Atoi(UserInputs["APP_SELECTED"])
 	appSelected := preBuiltApps[appSelectedIndex]
+	// rename if core project exist
+	os.Rename(appSelected.Name, UserInputs["APP_NAME"]+time.Now().String())
+	// rename if old project in same name
 	os.Rename(UserInputs["APP_NAME"], UserInputs["APP_NAME"]+time.Now().String())
 	cmd := exec.Command("git", "clone", appSelected.UrlHTTPS)
 	errD := cmd.Run()
 	// fmt.Println(errD)
 	helper.ErrorCheck(errD)
+
+	// get the old import path from .env file
+	oldImportPath := helper.GetEnvValueByKey(helper.PWD()+"/"+appSelected.Name+"/.env", "APP_IMPORT_PATH")
+	// rename after download the core project
 	errRename := os.Rename(appSelected.Name, UserInputs["APP_NAME"])
 	helper.ErrorCheck(errRename)
 
 	//cd to project file
-	pwd, errPWD := os.Getwd()
-	helper.ErrorCheck(errPWD)
-	errCD := os.Chdir(filepath.Join(pwd, UserInputs["APP_NAME"]))
-	helper.ErrorCheck(errCD)
+	helper.CD(UserInputs["APP_NAME"])
+	// fmt.Println(oldImportPath)
+	// Migrate import path. must after CD inside the project directory
+	helper.FixImportPath(oldImportPath, envApp.APP_IMPORT_PATH)
 
 	// Create .env file accordingly user data
 	f, err := os.Create(".env")
 	helper.ErrorCheck(err)
 
-	f.WriteString("APP_NAME    =" + strconv.FormatBool(envApp.APP_DEBUG) + "\n")
-	f.WriteString("APP_ENV     =" + envApp.APP_NAME + "\n")
-	f.WriteString("APP_KEY     =" + envApp.APP_ENV + "\n")
-	f.WriteString("APP_DEBUG   =" + envApp.APP_KEY + "\n")
-	f.WriteString("APP_URL     =" + strconv.Itoa(envApp.APP_PORT) + "\n")
-	f.WriteString("APP_PORT    =" + envApp.APP_PREBUILT + "\n")
-	f.WriteString("APP_PREBUILT=" + envApp.APP_URL + "\n\n\n")
+	f.WriteString("APP_NAME    		=" + envApp.APP_NAME + "\n")
+	f.WriteString("APP_IMPORT_PATH	=" + envApp.APP_IMPORT_PATH + "\n")
+	f.WriteString("APP_ENV     		=" + fmt.Sprintf("%v", helper.IfThenElse(envApp.APP_DEBUG, "Dev", "Prod")) + "\n")
+	f.WriteString("APP_KEY     		=" + envApp.APP_KEY + "\n")
+	f.WriteString("APP_DEBUG   		=" + envApp.APP_ENV + "\n")
+	f.WriteString("APP_URL     		=" + envApp.APP_URL + "\n\n\n")
+	f.WriteString("APP_PORT    		=" + strconv.Itoa(envApp.APP_PORT) + "\n")
+	f.WriteString("APP_PREBUILT		=" + envApp.APP_PREBUILT + "\n")
 
 	f.WriteString("LOG_CHANNEL=" + envLog.LOG_CHANNEL + "\n\n\n")
 
@@ -252,13 +260,14 @@ func makeAppName(arg string) string {
 }
 
 type ENV_APP struct {
-	APP_NAME     string
-	APP_ENV      string
-	APP_KEY      string
-	APP_DEBUG    bool
-	APP_URL      string
-	APP_PORT     int
-	APP_PREBUILT string
+	APP_NAME        string
+	APP_IMPORT_PATH string
+	APP_ENV         string
+	APP_KEY         string
+	APP_DEBUG       bool
+	APP_URL         string
+	APP_PORT        int
+	APP_PREBUILT    string
 }
 
 type ENV_LOG struct {
