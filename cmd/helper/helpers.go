@@ -235,17 +235,17 @@ func WriteRoutes(path string, routeName string) {
 				plural := pluralize.NewClient()
 				switch r.value {
 				case "Index":
-					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(plural.Plural(routeName))+"\", controllers."+r.value+routeName+")")
+					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(plural.Plural(routeName))+"/:page\", controllers."+r.value+routeName+")")
 				case "Create":
-					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(plural.Plural(routeName))+"/:id\", controllers."+r.value+routeName+")")
+					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(routeName)+"\", controllers."+r.value+routeName+")")
 
 				case "Show":
-					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(plural.Plural(routeName))+"/:id\", controllers."+r.value+routeName+")")
+					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(routeName)+"/:id\", controllers."+r.value+routeName+")")
 
 				case "Update":
-					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(plural.Plural(routeName))+"/\", controllers."+r.value+routeName+")")
+					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(routeName)+"/:id\", controllers."+r.value+routeName+")")
 				case "Destroy":
-					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(plural.Plural(routeName))+"/:id\", controllers."+r.value+routeName+")")
+					newLines = append(newLines, "\tr."+r.key+"(\"/"+strings.ToLower(routeName)+"/:id\", controllers."+r.value+routeName+")")
 
 				}
 			}
@@ -280,6 +280,42 @@ func scanLines(path string) ([]string, error) {
 	}
 
 	return lines, nil
+}
+
+// ScanDirFindLine fix import path when app migrate to new name or new host
+func ScanDirFindLine(dirToScan string, keywordToFind string, f *os.File) {
+	err := filepath.Walk(dirToScan,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() && info.Name() == ".git" {
+				return filepath.SkipDir
+			}
+			// fmt.Println(path, info.Size())
+			// if extenstion .go then read file and find old import path and replace new import path
+			if strings.Contains(path, ".go") {
+				lines, err := scanLines(path)
+				ErrorCheck(err)
+				for _, line := range lines {
+
+					if strings.Contains(line, keywordToFind) {
+
+						lineSplit := strings.Split(line, " ")
+						s := lineSplit[1]
+						// if the method public, to detect public methor check the name first letter is capital
+						if s != "DefaultProperties" {
+							f.WriteString("\t" + "db.DB.AutoMigrate(models." + s + "{})\n")
+						}
+
+					}
+				}
+			}
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // FixImportPath fix import path when app migrate to new name or new host

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bindu-bindu/bindu/cmd/helper"
@@ -26,11 +27,7 @@ func createNewApp(appName string) {
 	// ENV VARIABLES START
 	var envApp ENV_APP
 	var envLog ENV_LOG
-	var envDbMysql ENV_DB_MYSQL
-	var envDbSql ENV_DB_SQL
-	var envDbMongo ENV_DB_MONGO
-	var envDbPgsql ENV_DB_PGSQL
-	var envDbOracle ENV_DB_ORACLE
+	var envDb ENV_DB
 	// ENV STRUCTS END
 	var UserInputs = make(map[string]string)
 	fmt.Println("checking internet connection....")
@@ -46,11 +43,11 @@ func createNewApp(appName string) {
 		}
 		aName, err := promptAppName.Run()
 		helper.ErrorCheck(err)
-		UserInputs["APP_NAME"] = helper.MakeAppName(aName)
 		envApp.APP_NAME = helper.MakeAppName(aName)
 		envApp.APP_IMPORT_PATH = helper.AppImportPath(envApp.APP_NAME)
+
 	} else {
-		UserInputs["APP_NAME"] = appName
+
 		envApp.APP_NAME = appName
 		envApp.APP_IMPORT_PATH = helper.AppImportPath(envApp.APP_NAME)
 	}
@@ -84,7 +81,7 @@ func createNewApp(appName string) {
 	}
 
 	preSelectedIndex, result, err := promptPreBuiltApp.Run()
-	UserInputs["PRE_BUILT_APP"] = helper.MakeAppName(result)
+
 	envApp.APP_PREBUILT = helper.MakeAppName(result)
 	helper.ErrorCheck(err)
 	// the last item
@@ -105,8 +102,8 @@ func createNewApp(appName string) {
 			Items: []string{"Sqlite", "Mysql", "PGSql", "MongoDB", "Oracle", "None"},
 		}
 		_, dbAdapterName, err := promtDbAdapter.Run()
-		UserInputs["DATABASE_ADAPTER"] = helper.MakeAppName(dbAdapterName)
-		envDbMysql.MYSQL_DB_CONNECTION = true
+
+		envDb.DB_ADAPTER = strings.ToLower(dbAdapterName)
 		if dbAdapterName == "None" {
 			fmt.Println("I will set database manually")
 		} else {
@@ -118,8 +115,7 @@ func createNewApp(appName string) {
 			}
 			dbHost, err := promptDbHost.Run()
 			helper.ErrorCheck(err)
-			UserInputs["DATABASE_HOSTS"] = dbHost
-			envDbMysql.MYSQL_DB_HOST = dbHost
+			envDb.DB_HOST = dbHost
 
 			// DB Port
 			promptDbPort := promptui.Prompt{
@@ -129,19 +125,16 @@ func createNewApp(appName string) {
 			}
 			dbPort, err := promptDbPort.Run()
 			helper.ErrorCheck(err)
-			UserInputs["DATABASE_PORT"] = dbPort
-			P, _ := strconv.Atoi(dbPort)
-			envDbMysql.MYSQL_DB_PORT = P
+			envDb.DB_PORT = dbPort
 			// DB Name
 			promptDbName := promptui.Prompt{
 				Label:    "Database Name",
 				Validate: nil,
-				Default:  UserInputs["APP_NAME"],
+				Default:  appName,
 			}
 			dbName, err := promptDbName.Run()
 			helper.ErrorCheck(err)
-			UserInputs["DATABASE_NAME"] = dbName
-			envDbMysql.MYSQL_DB_DATABASE = dbName
+			envDb.DB_DATABASE = dbName
 			// DB User Name
 			promptDbUserName := promptui.Prompt{
 				Label:    "Database User Name",
@@ -150,8 +143,7 @@ func createNewApp(appName string) {
 			}
 			dbUserName, err := promptDbUserName.Run()
 			helper.ErrorCheck(err)
-			UserInputs["DATABASE_USERNAME"] = dbUserName
-			envDbMysql.MYSQL_DB_USERNAME = dbUserName
+			envDb.DB_USERNAME = dbUserName
 			// DB Password
 			promptDbPass := promptui.Prompt{
 				Label:    "Database Password",
@@ -159,8 +151,7 @@ func createNewApp(appName string) {
 			}
 			dbPass, err := promptDbPass.Run()
 			helper.ErrorCheck(err)
-			UserInputs["DATABASE_PASSWORD"] = dbPass
-			envDbMysql.MYSQL_DB_PASSWORD = dbPass
+			envDb.DB_PASSWORD = dbPass
 		}
 
 		// Run Project On Port
@@ -172,7 +163,6 @@ func createNewApp(appName string) {
 		projectPort, err := promptProjectPort.Run()
 		helper.ErrorCheck(err)
 		pp, _ := strconv.Atoi(projectPort)
-		UserInputs["APP_PORT"] = projectPort
 		envApp.APP_PORT = pp
 	}
 
@@ -180,9 +170,9 @@ func createNewApp(appName string) {
 	appSelectedIndex, _ := strconv.Atoi(UserInputs["APP_SELECTED"])
 	appSelected := preBuiltApps[appSelectedIndex]
 	// rename if core project exist
-	os.Rename(appSelected.Name, UserInputs["APP_NAME"]+time.Now().String())
+	os.Rename(appSelected.Name, envApp.APP_NAME+time.Now().String())
 	// rename if old project in same name
-	os.Rename(UserInputs["APP_NAME"], UserInputs["APP_NAME"]+time.Now().String())
+	os.Rename(envApp.APP_NAME, envApp.APP_NAME+time.Now().String())
 	cmd := exec.Command("git", "clone", appSelected.UrlHTTPS)
 	errD := cmd.Run()
 	// fmt.Println(errD)
@@ -191,11 +181,11 @@ func createNewApp(appName string) {
 	// get the old import path from .env file
 	oldImportPath := helper.GetEnvValueByKey(helper.PWD()+"/"+appSelected.Name+"/.env", "APP_IMPORT_PATH")
 	// rename after download the core project
-	errRename := os.Rename(appSelected.Name, UserInputs["APP_NAME"])
+	errRename := os.Rename(appSelected.Name, envApp.APP_NAME)
 	helper.ErrorCheck(errRename)
 
 	//cd to project file
-	helper.CD(UserInputs["APP_NAME"])
+	helper.CD(envApp.APP_NAME)
 	// fmt.Println(oldImportPath)
 	// Migrate import path. must after CD inside the project directory
 	helper.FixImportPath(oldImportPath, envApp.APP_IMPORT_PATH)
@@ -215,40 +205,13 @@ func createNewApp(appName string) {
 
 	f.WriteString("LOG_CHANNEL=" + envLog.LOG_CHANNEL + "\n\n\n")
 
-	f.WriteString("MYSQL_DB_CONNECTION=" + strconv.FormatBool(envDbMysql.MYSQL_DB_CONNECTION) + "\n")
-	f.WriteString("MYSQL_DB_HOST      =" + envDbMysql.MYSQL_DB_DATABASE + "\n")
-	f.WriteString("MYSQL_DB_PORT      =" + envDbMysql.MYSQL_DB_HOST + "\n")
-	f.WriteString("MYSQL_DB_DATABASE  =" + envDbMysql.MYSQL_DB_PASSWORD + "\n")
-	f.WriteString("MYSQL_DB_USERNAME  =" + strconv.Itoa(envDbMysql.MYSQL_DB_PORT) + "\n")
-	f.WriteString("MYSQL_DB_PASSWORD  =" + envDbMysql.MYSQL_DB_USERNAME + "\n\n\n")
+	f.WriteString("DB_ADAPTER   =" + envDb.DB_ADAPTER + "\n")
+	f.WriteString("DB_HOST      =" + envDb.DB_HOST + "\n")
+	f.WriteString("DB_PORT      =" + envDb.DB_PORT + "\n")
+	f.WriteString("DB_DATABASE  =" + envDb.DB_DATABASE + "\n")
+	f.WriteString("DB_USERNAME  =" + envDb.DB_USERNAME + "\n")
+	f.WriteString("DB_PASSWORD  =" + envDb.DB_PASSWORD + "\n\n\n")
 
-	f.WriteString("MONGO_DB_CONNECTION=" + strconv.FormatBool(envDbMysql.MYSQL_DB_CONNECTION) + "\n")
-	f.WriteString("MONGO_DB_HOST      =" + envDbMongo.MONGO_DB_DATABASE + "\n")
-	f.WriteString("MONGO_DB_PORT      =" + envDbMongo.MONGO_DB_HOST + "\n")
-	f.WriteString("MONGO_DB_DATABASE  =" + envDbMongo.MONGO_DB_PASSWORD + "\n")
-	f.WriteString("MONGO_DB_USERNAME  =" + strconv.Itoa(envDbMongo.MONGO_DB_PORT) + "\n")
-	f.WriteString("MONGO_DB_PASSWORD  =" + envDbMongo.MONGO_DB_USERNAME + "\n\n\n")
-
-	f.WriteString("SQL_DB_CONNECTION=" + strconv.FormatBool(envDbSql.SQL_DB_CONNECTION) + "\n")
-	f.WriteString("SQL_DB_HOST      =" + envDbSql.SQL_DB_DATABASE + "\n")
-	f.WriteString("SQL_DB_PORT      =" + envDbSql.SQL_DB_HOST + "\n")
-	f.WriteString("SQL_DB_DATABASE  =" + envDbSql.SQL_DB_PASSWORD + "\n")
-	f.WriteString("SQL_DB_USERNAME  =" + strconv.Itoa(envDbSql.SQL_DB_PORT) + "\n")
-	f.WriteString("SQL_DB_PASSWORD  =" + envDbSql.SQL_DB_USERNAME + "\n\n\n")
-
-	f.WriteString("PGSQL_DB_CONNECTION=" + strconv.FormatBool(envDbPgsql.PGSQL_DB_CONNECTION) + "\n")
-	f.WriteString("PGSQL_DB_HOST      =" + envDbPgsql.PGSQL_DB_DATABASE + "\n")
-	f.WriteString("PGSQL_DB_PORT      =" + envDbPgsql.PGSQL_DB_HOST + "\n")
-	f.WriteString("PGSQL_DB_DATABASE  =" + envDbPgsql.PGSQL_DB_PASSWORD + "\n")
-	f.WriteString("PGSQL_DB_USERNAME  =" + strconv.Itoa(envDbPgsql.PGSQL_DB_PORT) + "\n")
-	f.WriteString("PGSQL_DB_PASSWORD  =" + envDbPgsql.PGSQL_DB_USERNAME + "\n\n\n")
-
-	f.WriteString("ORACLE_DB_CONNECTION=" + strconv.FormatBool(envDbOracle.ORACLE_DB_CONNECTION) + "\n")
-	f.WriteString("ORACLE_DB_HOST      =" + envDbOracle.ORACLE_DB_DATABASE + "\n")
-	f.WriteString("ORACLE_DB_PORT      =" + envDbOracle.ORACLE_DB_HOST + "\n")
-	f.WriteString("ORACLE_DB_DATABASE  =" + envDbOracle.ORACLE_DB_PASSWORD + "\n")
-	f.WriteString("ORACLE_DB_USERNAME  =" + strconv.Itoa(envDbOracle.ORACLE_DB_PORT) + "\n")
-	f.WriteString("ORACLE_DB_PASSWORD  =" + envDbOracle.ORACLE_DB_USERNAME + "\n\n\n")
 	defer f.Close()
 	fmt.Println("Done!")
 	// i := 1
@@ -274,47 +237,11 @@ type ENV_LOG struct {
 	LOG_CHANNEL string
 }
 
-type ENV_DB_MYSQL struct {
-	MYSQL_DB_CONNECTION bool
-	MYSQL_DB_HOST       string
-	MYSQL_DB_PORT       int
-	MYSQL_DB_DATABASE   string
-	MYSQL_DB_USERNAME   string
-	MYSQL_DB_PASSWORD   string
-}
-
-type ENV_DB_SQL struct {
-	SQL_DB_CONNECTION bool
-	SQL_DB_HOST       string
-	SQL_DB_PORT       int
-	SQL_DB_DATABASE   string
-	SQL_DB_USERNAME   string
-	SQL_DB_PASSWORD   string
-}
-
-type ENV_DB_MONGO struct {
-	MONGO_DB_CONNECTION bool
-	MONGO_DB_HOST       string
-	MONGO_DB_PORT       int
-	MONGO_DB_DATABASE   string
-	MONGO_DB_USERNAME   string
-	MONGO_DB_PASSWORD   string
-}
-
-type ENV_DB_PGSQL struct {
-	PGSQL_DB_CONNECTION bool
-	PGSQL_DB_HOST       string
-	PGSQL_DB_PORT       int
-	PGSQL_DB_DATABASE   string
-	PGSQL_DB_USERNAME   string
-	PGSQL_DB_PASSWORD   string
-}
-
-type ENV_DB_ORACLE struct {
-	ORACLE_DB_CONNECTION bool
-	ORACLE_DB_HOST       string
-	ORACLE_DB_PORT       int
-	ORACLE_DB_DATABASE   string
-	ORACLE_DB_USERNAME   string
-	ORACLE_DB_PASSWORD   string
+type ENV_DB struct {
+	DB_ADAPTER  string
+	DB_HOST     string
+	DB_PORT     string
+	DB_DATABASE string
+	DB_USERNAME string
+	DB_PASSWORD string
 }
