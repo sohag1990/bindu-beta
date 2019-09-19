@@ -123,6 +123,11 @@ func CleanEmptyArray(s []string) []string {
 	return r
 }
 
+type Property struct {
+	Key   string
+	Value string
+}
+
 // PropertyFormatter formate the correct property and type
 func PropertyFormatter(prop string) string {
 	p := strings.Split(prop, ":")
