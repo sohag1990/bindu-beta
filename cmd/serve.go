@@ -49,7 +49,7 @@ func serverRun() {
 	dependencyCmd := exec.Command("go", "get")
 	err := dependencyCmd.Run()
 	helper.ErrorCheck(err)
-	serverRunCMD := exec.Command("go", "run", "Server.go")
+	serverRunCMD := exec.Command("go", "run", "main.go")
 	err = serverRunCMD.Run()
 	helper.ErrorCheck(err)
 
