@@ -195,7 +195,7 @@ func CD(appName string) {
 
 // GetEnvValueByKey Read Env file and find value by key
 func GetEnvValueByKey(path string, envKey string) string {
-	lines, err := scanLines(path)
+	lines, err := ScanLines(path)
 	if err != nil {
 		fmt.Println("File not found!")
 		panic(err)
@@ -214,7 +214,7 @@ func GetEnvValueByKey(path string, envKey string) string {
 }
 
 func WriteRoutes(path string, routeName string) {
-	lines, err := scanLines(path)
+	lines, err := ScanLines(path)
 	ErrorCheck(err)
 	var lineNumber int
 	var newLines []string
@@ -265,7 +265,7 @@ func WriteRoutes(path string, routeName string) {
 
 }
 
-func scanLines(path string) ([]string, error) {
+func ScanLines(path string) ([]string, error) {
 
 	file, err := os.Open(path)
 	if err != nil {
@@ -300,7 +300,7 @@ func ScanDirFindLine(dirToScan string, keywordToFind string, f *os.File) {
 			// fmt.Println(path, info.Size())
 			// if extenstion .go then read file and find old import path and replace new import path
 			if strings.Contains(path, ".go") {
-				lines, err := scanLines(path)
+				lines, err := ScanLines(path)
 				ErrorCheck(err)
 				for _, line := range lines {
 
@@ -336,7 +336,7 @@ func FixImportPath(oldImportPath string, newImportPath string) {
 			// fmt.Println(path, info.Size())
 			// if extenstion .go then read file and find old import path and replace new import path
 			if strings.Contains(path, ".go") {
-				lines, err := scanLines(path)
+				lines, err := ScanLines(path)
 				ErrorCheck(err)
 				for _, line := range lines {
 					// fmt.Println(line)
@@ -356,4 +356,80 @@ func FixImportPath(oldImportPath string, newImportPath string) {
 	if err != nil {
 		log.Println(err)
 	}
+}
+
+// ScanDirFindController find controller to generate auto swagger documentation
+func ScanDirFindController(dirToScan string, keywordToFind string, routeName string, routeMethodName string) {
+	err := filepath.Walk(dirToScan,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() && info.Name() == ".git" {
+				return filepath.SkipDir
+			}
+			// fmt.Println(path, info.Size())
+			// if extenstion .go then read file and find old import path and replace new import path
+
+			if strings.Contains(path, ".go") {
+				lines, err := ScanLines(path)
+				ErrorCheck(err)
+				for i, line := range lines {
+
+					if strings.Contains(line, keywordToFind) {
+
+						// lineSplit := strings.Split(line, " ")
+						// s := lineSplit[1]
+						// // if the method public, to detect public methor check the name first letter is capital
+						// if s != "DefaultProperties" {
+						// 	f.WriteString("\t" + "db.DB.AutoMigrate(models." + s + "{})\n")
+						// }
+
+						var newLines []string
+						newLines = append(newLines, lines[:i]...)
+
+						found := false // find if already exist the documentation
+						for _, nl := range newLines {
+							if strings.Contains(nl, "@Router "+routeName+" ") { // if the swagger doc already exist then skip
+								found = true
+								// fmt.Println(nl)
+								// fmt.Println(path)
+								break
+							}
+						}
+
+						newLines = append(newLines, "\t//")
+						newLines = append(newLines, "\t// @Summary "+routeName+" a api url")
+						newLines = append(newLines, "\t// @Description "+routeName+" "+routeMethodName)
+						newLines = append(newLines, "\t// @Accept  json")
+						newLines = append(newLines, "\t// @Produce  json")
+						newLines = append(newLines, "\t// @Success 200 {string} string	\"ok\"")
+						newLines = append(newLines, "\t// @Router "+routeName+" ["+routeMethodName+"]")
+
+						if !found {
+							newLines = append(newLines, lines[i:]...)
+							lines = newLines
+							// fmt.Println(lines)
+						}
+
+						// fmt.Println(line)
+					}
+				}
+				ioutil.WriteFile(path, []byte(strings.Join(lines, "\n")), 0644)
+			}
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func TrimQuote(s string) string {
+	if len(s) > 0 && s[0] == '"' {
+		s = s[1:]
+	}
+	if len(s) > 0 && s[len(s)-1] == '"' {
+		s = s[:len(s)-1]
+	}
+	return s
 }
