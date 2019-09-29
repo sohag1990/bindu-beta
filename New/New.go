@@ -1,4 +1,4 @@
-package newActions
+package new
 
 import (
 	"fmt"
@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bindu-bindu/bindu/cmd/helper"
+	helper "github.com/bindu-bindu/bindu/Helpers"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
-// Init New project create proccess
-func Init(cmd *cobra.Command, args []string) {
+// New New project create proccess
+func New(cmd *cobra.Command, args []string) {
 	// fmt.Println(len(args))
 	appName := ""
 	if len(args) > 0 {

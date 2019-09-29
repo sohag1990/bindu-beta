@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bindu-bindu/bindu/cmd/helper"
+	helper "github.com/bindu-bindu/bindu/Helper"
 	"github.com/gertd/go-pluralize"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"

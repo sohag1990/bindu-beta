@@ -16,7 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/bindu-bindu/bindu/cmd/helper"
+	helper "github.com/bindu-bindu/bindu/Helper"
 	"github.com/spf13/cobra"
 )
 
