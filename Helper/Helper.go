@@ -6,6 +6,7 @@ import (
 	"go/build"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -15,6 +16,74 @@ import (
 	pluralize "github.com/gertd/go-pluralize"
 	"github.com/manifoldco/promptui"
 )
+
+// ENV_APP env variable app data
+type ENV_APP struct {
+	APP_NAME        string
+	APP_IMPORT_PATH string
+	APP_ENV         string
+	APP_KEY         string
+	APP_DEBUG       bool
+	APP_URL         string
+	APP_PORT        int
+	APP_PREBUILT    string
+}
+
+// ENV_APP env variable app log data
+type ENV_LOG struct {
+	LOG_CHANNEL string
+}
+
+// ENV_APP env variable app DB connection data
+type ENV_DB struct {
+	DB_ADAPTER  string
+	DB_HOST     string
+	DB_PORT     string
+	DB_DATABASE string
+	DB_USERNAME string
+	DB_PASSWORD string
+}
+
+// CLI is the struct of user commands
+type CLI struct {
+	Args  []string
+	Flags []Flag
+}
+
+// Flag is the command flag key and value eg. --port 8080 --host localhost
+type Flag struct {
+	Key   string
+	Value string
+}
+
+// CommandChain is the command chain of user input.
+type CommandChain interface {
+	GetArgs() []string
+	GetFlags() []Flag
+}
+
+// GetArgs to find sanitized array of commands args
+func (c CLI) GetArgs() []string {
+	var newArgs []string
+	for _, arg := range c.Args {
+
+		splitArg := strings.Split(arg, ",")
+		if len(splitArg) > 1 {
+			for _, cItem := range splitArg {
+				newArgs = append(newArgs, strings.Title(cItem))
+			}
+		} else {
+			newArgs = append(newArgs, strings.Title(arg))
+		}
+
+	}
+	return CleanEmptyArray(newArgs)
+}
+
+// GetFlags to find sanitized array of commands args
+func (c CLI) GetFlags() []Flag {
+	return c.Flags
+}
 
 // ArrayFind return true or false with int. first check the bool then use index, Because if not found item also return 0
 func ArrayFind(s interface{}, elem interface{}) (int, bool) {
@@ -176,6 +245,9 @@ func MakeAppName(arg string) string {
 
 // AppImportPath Project import path generate
 func AppImportPath(appName string) string {
+	if len(appName) == 0 {
+		return ""
+	}
 	projectPath := strings.Replace(PWD(), build.Default.GOPATH+"/src/", "", -1)
 	return projectPath + "/" + appName
 }
@@ -432,4 +504,40 @@ func TrimQuote(s string) string {
 		s = s[:len(s)-1]
 	}
 	return s
+}
+
+// NetCheck checking internet connection by ping to github.com and return bool
+func NetCheck() bool {
+	fmt.Println("checking internet connection....")
+	_, err := net.Dial("tcp", "github.com:443")
+	if err != nil {
+		fmt.Println("No internet connection")
+		return false
+	}
+	return true
+}
+
+// AskString Ask user input in Terminal
+func AskString(l string, d string) string {
+	prompt := promptui.Prompt{
+		Label:    l,
+		Validate: nil,
+		Default:  d,
+	}
+	str, err := prompt.Run()
+	ErrorCheck(err)
+	return str
+}
+
+// AskSelect Ask to select from suggestion
+func AskSelect(l string, s []string) (int, string) {
+	p := promptui.Select{
+		Label: l,
+		Items: s,
+	}
+	i, selected, err := p.Run()
+
+	ErrorCheck(err)
+	return i, selected
+
 }

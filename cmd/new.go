@@ -27,8 +27,9 @@ var newCmd = &cobra.Command{
 	Short: "Create new project by given projectName",
 	Long:  `Generate a new project using given projectName`,
 	Run: func(cmd *cobra.Command, args []string) {
-		args = helper.SanitizeUserInput(args)
-		new.New(cmd, args)
+		var cli helper.CommandChain
+		cli = helper.CLI{Args: args, Flags: nil}
+		new.New(cmd, cli)
 	},
 }
 

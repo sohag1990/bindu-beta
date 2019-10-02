@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	helper "github.com/bindu-bindu/bindu/Helpers"
+	helper "github.com/bindu-bindu/bindu/Helper"
 	"github.com/spf13/cobra"
 )
 

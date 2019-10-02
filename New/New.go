@@ -2,55 +2,26 @@ package new
 
 import (
 	"fmt"
-	"net"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"time"
 
-	helper "github.com/bindu-bindu/bindu/Helpers"
-	"github.com/manifoldco/promptui"
+	helper "github.com/bindu-bindu/bindu/Helper"
 	"github.com/spf13/cobra"
 )
 
-// New New project create proccess
-func New(cmd *cobra.Command, args []string) {
-	// fmt.Println(len(args))
-	appName := ""
-	if len(args) > 0 {
-		appName = args[0]
+// New project create proccess
+func New(cmd *cobra.Command, c helper.CommandChain) {
+	if !helper.NetCheck() {
+		return
 	}
-	createNewApp(helper.MakeAppName(appName))
-}
-func createNewApp(appName string) {
-	// ENV VARIABLES START
-	var envApp ENV_APP
-	var envLog ENV_LOG
-	var envDb ENV_DB
-	// ENV STRUCTS END
-	var UserInputs = make(map[string]string)
-	fmt.Println("checking internet connection....")
-	_, err := net.Dial("tcp", "github.com:443")
-	helper.ErrorCheck(err)
-	UserInputs["NetCheck"] = "OK"
-	// project name
-	if len(appName) == 0 {
-		promptAppName := promptui.Prompt{
-			Label:    "App Name",
-			Validate: nil,
-			Default:  "NewProject",
-		}
-		aName, err := promptAppName.Run()
-		helper.ErrorCheck(err)
-		envApp.APP_NAME = helper.MakeAppName(aName)
-		envApp.APP_IMPORT_PATH = helper.AppImportPath(envApp.APP_NAME)
-
-	} else {
-
-		envApp.APP_NAME = appName
-		envApp.APP_IMPORT_PATH = helper.AppImportPath(envApp.APP_NAME)
-	}
+	// ENV VARIABLES to catch user input data
+	var envApp helper.ENV_APP
+	var envLog helper.ENV_LOG
+	var envDb helper.ENV_DB
+	// PrebuiltApps Data
 	type preBuiltApp struct {
 		Label    string
 		Name     string
@@ -68,128 +39,108 @@ func createNewApp(appName string) {
 		{Label: "GRPC Client", Name: "bindu-grpc-client", UrlSSH: "", UrlHTTPS: "https://github.com/bindu-bindu/bindu-grpc-client.git"},
 		{Label: "Download Third Party Project", Name: "download", UrlSSH: "", UrlHTTPS: ""},
 	}
+	appName := ""
+	args := c.GetArgs()
+	if len(args) > 0 {
+		appName = args[0]
+		envApp.APP_NAME = appName
+		envApp.APP_IMPORT_PATH = helper.AppImportPath(envApp.APP_NAME)
+	}
+
+	// var UserInputs = make(map[string]string)
+
+	// if appName empty then as in terminal for app Name
+	if len(appName) == 0 {
+		askAppName := helper.AskString("App Name", "NewProject")
+		envApp.APP_NAME = helper.MakeAppName(askAppName)
+		// Make Import path for this project according to the GO IMPORT rules
+		envApp.APP_IMPORT_PATH = helper.AppImportPath(envApp.APP_NAME)
+	}
 
 	var preBuiltAppLabels []string
 	for _, app := range preBuiltApps {
 		preBuiltAppLabels = append(preBuiltAppLabels, app.Label)
 	}
-
-	//prebuilt app selection
-	promptPreBuiltApp := promptui.Select{
-		Label: "Select pre-built project",
-		Items: preBuiltAppLabels,
-	}
-
-	preSelectedIndex, result, err := promptPreBuiltApp.Run()
-
+	//Ask user to select a prebuilt app
+	selectedIndex, result := helper.AskSelect("Select a app", preBuiltAppLabels)
 	envApp.APP_PREBUILT = helper.MakeAppName(result)
-	helper.ErrorCheck(err)
-	// the last item
-	if preSelectedIndex == len(preBuiltApps)-1 {
-		promptDownLoadLink := promptui.Prompt{
-			Label:    preBuiltApps[7].Label,
-			Validate: nil,
-		}
-		downLoadLink, err := promptDownLoadLink.Run()
-		helper.ErrorCheck(err)
-		UserInputs["APP_SELECTED"] = strconv.Itoa(preSelectedIndex)
-		preBuiltApps[7].UrlHTTPS = downLoadLink
+
+	// if user want to download app from server, the last item (download from remote)
+	// ask for remote source url
+	// Notes: prebuilt app has built in env data
+	if selectedIndex == len(preBuiltApps)-1 {
+		preBuiltApps[selectedIndex].UrlHTTPS = helper.AskString(preBuiltApps[selectedIndex].Label, "eg. https://...")
 
 	} else {
-		//Select Database
-		promtDbAdapter := promptui.Select{
-			Label: "Select Database",
-			Items: []string{"Sqlite", "Mysql", "PGSql", "MongoDB", "Oracle", "None"},
-		}
-		_, dbAdapterName, err := promtDbAdapter.Run()
-
+		//Get User Input
+		//Ask to Select Database Adapter
+		dbAdapters := []string{"Mysql", "Sqlite", "PGSql", "MongoDB", "None"}
+		_, dbAdapterName := helper.AskSelect("Select Database", dbAdapters)
 		envDb.DB_ADAPTER = strings.ToLower(dbAdapterName)
 		if dbAdapterName == "None" {
 			fmt.Println("I will set database manually")
 		} else {
-			// DB Host
-			promptDbHost := promptui.Prompt{
-				Label:    "Database Host",
-				Validate: nil,
-				Default:  "localhost",
-			}
-			dbHost, err := promptDbHost.Run()
-			helper.ErrorCheck(err)
-			envDb.DB_HOST = dbHost
-
-			// DB Port
-			promptDbPort := promptui.Prompt{
-				Label:    "Database PORT",
-				Validate: nil,
-				Default:  "3306",
-			}
-			dbPort, err := promptDbPort.Run()
-			helper.ErrorCheck(err)
-			envDb.DB_PORT = dbPort
-			// DB Name
-			promptDbName := promptui.Prompt{
-				Label:    "Database Name",
-				Validate: nil,
-				Default:  appName,
-			}
-			dbName, err := promptDbName.Run()
-			helper.ErrorCheck(err)
-			envDb.DB_DATABASE = dbName
-			// DB User Name
-			promptDbUserName := promptui.Prompt{
-				Label:    "Database User Name",
-				Validate: nil,
-				Default:  "root",
-			}
-			dbUserName, err := promptDbUserName.Run()
-			helper.ErrorCheck(err)
-			envDb.DB_USERNAME = dbUserName
-			// DB Password
-			promptDbPass := promptui.Prompt{
-				Label:    "Database Password",
-				Validate: nil,
-			}
-			dbPass, err := promptDbPass.Run()
-			helper.ErrorCheck(err)
-			envDb.DB_PASSWORD = dbPass
+			// Ask DB Host
+			envDb.DB_HOST = helper.AskString("Database Host", "localhost")
+			// Ask DB Port
+			envDb.DB_PORT = helper.AskString("Database PORT", "3306")
+			// Ask DB Name
+			envDb.DB_DATABASE = helper.AskString("Database Name", envApp.APP_NAME)
+			// Ask DB User Name
+			envDb.DB_USERNAME = helper.AskString("Database Username", "root")
+			// Ask DB Password
+			envDb.DB_PASSWORD = helper.AskString("Database Password", "")
+			// Ask Run Project On Port
+			pp, _ := strconv.Atoi(helper.AskString("Run Project On PORT", "8080"))
+			envApp.APP_PORT = pp
 		}
 
-		// Run Project On Port
-		promptProjectPort := promptui.Prompt{
-			Label:    "Run project on port",
-			Validate: nil,
-			Default:  "8080",
-		}
-		projectPort, err := promptProjectPort.Run()
-		helper.ErrorCheck(err)
-		pp, _ := strconv.Atoi(projectPort)
-		envApp.APP_PORT = pp
 	}
 
-	fmt.Println("Creating new project hold tight.")
-	appSelectedIndex, _ := strconv.Atoi(UserInputs["APP_SELECTED"])
-	appSelected := preBuiltApps[appSelectedIndex]
-	// rename if core project exist
-	os.Rename(appSelected.Name, envApp.APP_NAME+time.Now().String())
-	// rename if old project in same name
-	os.Rename(envApp.APP_NAME, envApp.APP_NAME+time.Now().String())
-	cmd := exec.Command("git", "clone", appSelected.UrlHTTPS)
-	errD := cmd.Run()
-	// fmt.Println(errD)
-	helper.ErrorCheck(errD)
+	fmt.Println("Creating new project hold tight.......")
 
-	// get the old import path from .env file
+	appSelected := preBuiltApps[selectedIndex]
+	// rename if core project exist
+	if os.Rename(appSelected.Name, envApp.APP_NAME+time.Now().String()) == nil {
+		fmt.Println(appSelected.Name+" name already exsits, renamed to ", envApp.APP_NAME+time.Now().String())
+	}
+
+	// rename if old project in same name
+	if os.Rename(envApp.APP_NAME, envApp.APP_NAME+time.Now().String()) == nil {
+		fmt.Println(appSelected.Name+" name already exsits, renamed to ", envApp.APP_NAME+time.Now().String())
+	}
+	// Download project from remote
+	cmdDownload := exec.Command("git", "clone", appSelected.UrlHTTPS)
+	dError := cmdDownload.Run()
+	helper.ErrorCheck(dError)
+	fmt.Println("Project downloaded from ", appSelected.UrlHTTPS)
+
+	// To fix import path, get the old import path from .env file
 	oldImportPath := helper.GetEnvValueByKey(helper.PWD()+"/"+appSelected.Name+"/.env", "APP_IMPORT_PATH")
-	// rename after download the core project
+	// fmt.Println("Old Import Path ", oldImportPath)
+	// Rename after download the core project
 	errRename := os.Rename(appSelected.Name, envApp.APP_NAME)
 	helper.ErrorCheck(errRename)
-
+	// fmt.Println(appSelected.Name + " Renamed to... " + envApp.APP_NAME)
 	//cd to project file
 	helper.CD(envApp.APP_NAME)
-	// fmt.Println(oldImportPath)
+	// fmt.Println("Enter into the new project " + envApp.APP_NAME)
 	// Migrate import path. must after CD inside the project directory
 	helper.FixImportPath(oldImportPath, envApp.APP_IMPORT_PATH)
+	// Createing env file according to the user data
+	writtingEnvFileForNewProject(envApp, envDb, envLog)
+	fmt.Println("Env file created")
+	fmt.Println("Project Creation Done!")
+	// i := 1
+	// for k, v := range UserInputs {
+	// 	fmt.Println(i, ") ", k, ":", v)
+	// 	i++
+	// }
 
+}
+
+// Writting env file for new project
+func writtingEnvFileForNewProject(envApp helper.ENV_APP, envDb helper.ENV_DB, envLog helper.ENV_LOG) {
 	// Create .env file accordingly user data
 	f, err := os.Create(".env")
 	helper.ErrorCheck(err)
@@ -213,35 +164,4 @@ func createNewApp(appName string) {
 	f.WriteString("DB_PASSWORD  =" + envDb.DB_PASSWORD + "\n\n\n")
 
 	defer f.Close()
-	fmt.Println("Done!")
-	// i := 1
-	// for k, v := range UserInputs {
-	// 	fmt.Println(i, ") ", k, ":", v)
-	// 	i++
-	// }
-
-}
-
-type ENV_APP struct {
-	APP_NAME        string
-	APP_IMPORT_PATH string
-	APP_ENV         string
-	APP_KEY         string
-	APP_DEBUG       bool
-	APP_URL         string
-	APP_PORT        int
-	APP_PREBUILT    string
-}
-
-type ENV_LOG struct {
-	LOG_CHANNEL string
-}
-
-type ENV_DB struct {
-	DB_ADAPTER  string
-	DB_HOST     string
-	DB_PORT     string
-	DB_DATABASE string
-	DB_USERNAME string
-	DB_PASSWORD string
 }
