@@ -28,6 +28,7 @@ var PreBuiltApps = []preBuiltApp{
 var DbAdapters = []string{"Mysql", "Sqlite", "PGSql", "MongoDB", "None"}
 
 // bindu new Hello --app Blank --db 'AdapterName:HostName:Port:DbName:DbUserName: DbPass' --port 8080
+// bindu new Hello --app blank --port 9999 --db Mysql:Localhost:3306:blog:root
 
 // FindPrebuitAppIndex find prebuilt app index
 func FindPrebuitAppIndex(keyword string) (int, bool) {

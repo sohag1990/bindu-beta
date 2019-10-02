@@ -30,13 +30,13 @@ var newCmd = &cobra.Command{
 	Long:  `Generate a new project using given projectName`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var cli helper.CommandChain
+		cli = helper.InitialCli()
 		var flags = []helper.Flag{
 			{Key: "app", Values: []string{fmt.Sprintf("%v", cmd.Flag("app").Value)}},
 			{Key: "db", Values: []string{fmt.Sprintf("%v", cmd.Flag("db").Value)}},
 			{Key: "port", Values: []string{fmt.Sprintf("%v", cmd.Flag("port").Value)}},
 		}
-
-		cli = helper.CLI{Args: args, Flags: flags}
+		cli.SetCli(args, flags)
 		new.New(cmd, cli)
 	},
 }

@@ -58,12 +58,36 @@ type Flag struct {
 
 // CommandChain is the command chain of user input.
 type CommandChain interface {
+	SetCli(args []string, flags []Flag)
+	SetCliArgs(args []string)
+	SetCliFlags(flags []Flag)
 	GetArgs() []string
 	GetFlags() []Flag
 }
 
+// SetCli to set cli
+func (c *CLI) SetCli(args []string, flags []Flag) {
+	c.Args = args
+	c.Flags = flags
+}
+
+// SetCliArgs to set cli
+func (c *CLI) SetCliArgs(args []string) {
+	c.Args = args
+}
+
+// SetCliFlags to set cli
+func (c *CLI) SetCliFlags(flags []Flag) {
+	c.Flags = flags
+}
+
+// CreateCli initialize CLI
+func InitialCli() *CLI {
+	return &CLI{}
+}
+
 // GetArgs to find sanitized array of commands args
-func (c CLI) GetArgs() []string {
+func (c *CLI) GetArgs() []string {
 	var newArgs []string
 	for _, arg := range c.Args {
 
@@ -75,9 +99,9 @@ func (c CLI) GetArgs() []string {
 		} else {
 			newArgs = append(newArgs, strings.Title(arg))
 		}
-
 	}
-	return CleanEmptyArray(newArgs)
+	c.Args = newArgs
+	return CleanEmptyArray(c.Args)
 }
 
 // GetFlags to find sanitized array of commands args
@@ -537,7 +561,7 @@ func AskString(l string, d string) string {
 	return str
 }
 
-// AskSelect Ask to select from suggestion
+// AskSelect Ask to select from suggestion returns index and itemName
 func AskSelect(l string, s []string) (int, string) {
 	p := promptui.Select{
 		Label: l,
@@ -548,4 +572,14 @@ func AskSelect(l string, s []string) (int, string) {
 	ErrorCheck(err)
 	return i, selected
 
+}
+
+// FileExists checks if a file exists and is not a directory before we
+// try using it to prevent further errors.
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
