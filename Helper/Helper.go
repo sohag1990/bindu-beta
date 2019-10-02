@@ -29,12 +29,7 @@ type ENV_APP struct {
 	APP_PREBUILT    string
 }
 
-// ENV_APP env variable app log data
-type ENV_LOG struct {
-	LOG_CHANNEL string
-}
-
-// ENV_APP env variable app DB connection data
+// ENV_DB env variable app DB connection data
 type ENV_DB struct {
 	DB_ADAPTER  string
 	DB_HOST     string
@@ -42,6 +37,11 @@ type ENV_DB struct {
 	DB_DATABASE string
 	DB_USERNAME string
 	DB_PASSWORD string
+}
+
+// ENV_LOG env variable app log data
+type ENV_LOG struct {
+	LOG_CHANNEL string
 }
 
 // CLI is the struct of user commands
@@ -52,8 +52,8 @@ type CLI struct {
 
 // Flag is the command flag key and value eg. --port 8080 --host localhost
 type Flag struct {
-	Key   string
-	Value string
+	Key    string
+	Values []string
 }
 
 // CommandChain is the command chain of user input.
@@ -82,16 +82,24 @@ func (c CLI) GetArgs() []string {
 
 // GetFlags to find sanitized array of commands args
 func (c CLI) GetFlags() []Flag {
-	return c.Flags
+	var newFlags []Flag
+	for _, flag := range c.Flags {
+		var f Flag
+		f.Key = flag.Key
+		f.Values = strings.Split(flag.Values[0], ",")
+		newFlags = append(newFlags, f)
+	}
+	return newFlags
+
 }
 
 // ArrayFind return true or false with int. first check the bool then use index, Because if not found item also return 0
-func ArrayFind(s interface{}, elem interface{}) (int, bool) {
-	arrV := reflect.ValueOf(s)
+func ArrayFind(arr interface{}, keyword interface{}) (int, bool) {
+	arrV := reflect.ValueOf(arr)
 
 	if arrV.Kind() == reflect.Slice {
 		for i := 0; i < arrV.Len(); i++ {
-			if arrV.Index(i).Interface() == elem {
+			if strings.ToLower(fmt.Sprintf("%v", arrV.Index(i).Interface())) == strings.ToLower(fmt.Sprintf("%v", keyword)) {
 				return i, true
 			}
 		}

@@ -64,7 +64,6 @@ func init() {
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	// rootCmd.Flags().StringP("migration", "m", "", "Set your name")
-	rootCmd.PersistentFlags().StringP("port", "p", "", "Run on specific port number default 8888")
 
 }
 

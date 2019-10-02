@@ -16,6 +16,8 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
+
 	helper "github.com/bindu-bindu/bindu/Helper"
 	new "github.com/bindu-bindu/bindu/New"
 	"github.com/spf13/cobra"
@@ -28,7 +30,13 @@ var newCmd = &cobra.Command{
 	Long:  `Generate a new project using given projectName`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var cli helper.CommandChain
-		cli = helper.CLI{Args: args, Flags: nil}
+		var flags = []helper.Flag{
+			{Key: "app", Values: []string{fmt.Sprintf("%v", cmd.Flag("app").Value)}},
+			{Key: "db", Values: []string{fmt.Sprintf("%v", cmd.Flag("db").Value)}},
+			{Key: "port", Values: []string{fmt.Sprintf("%v", cmd.Flag("port").Value)}},
+		}
+
+		cli = helper.CLI{Args: args, Flags: flags}
 		new.New(cmd, cli)
 	},
 }
@@ -45,4 +53,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// newCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	newCmd.Flags().StringP("port", "p", "8080", "Run on specific port number default 8080. eg --p 9999")
+	newCmd.Flags().String("app", "Blank", "Prebuilt app name or slug or url\nAvailable Prebuilt app(Blank, Basic Web, Basic Api, Blog, E-Commerce, GRPC Server, GRPC Client)\neg. --app Blank")
+	newCmd.Flags().String("db", "", "db info eg. --db AdapterName:HostName:Port:DbName:DbUserName:DbPass")
 }
