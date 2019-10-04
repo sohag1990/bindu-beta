@@ -44,23 +44,37 @@ to quickly create a Cobra application.`,
 		args = helper.SanitizeUserInput(args)
 		switch {
 		case args[0] == "Swagger":
+			// to skip download lib from web
 			s, _ := strconv.ParseBool(fmt.Sprintf("%v", cmd.Flag("skip").Value))
 			// fmt.Println(s)
 			if s == false {
+				fmt.Println("Downloading.... swag")
 				fmt.Println(exec.Command("go", "get", "-u", "github.com/swaggo/swag/cmd/swag").Run())
+				fmt.Println("github.com/swaggo/swag/cmd/swag  ---done")
+
+				fmt.Println("Downloading.... gin-swagger")
 				fmt.Println(exec.Command("go", "get", "-u", "github.com/swaggo/gin-swagger").Run())
+				fmt.Println("github.com/swaggo/gin-swagger  ---done")
+
+				fmt.Println("Downloading.... Docs")
 				fmt.Println(exec.Command("go", "get", "-u", "github.com/swaggo/files").Run())
+				fmt.Println("github.com/swaggo/files  ---done")
 			}
 			// initialize swag if not exist
+			fmt.Println("Initializing Swag... ---done")
 			fmt.Println(exec.Command("swag", "init").Run())
 
 			// Edit main.go then read file and find find if exist swagger or initialize swagger
 			theImportPath := helper.GetEnvValueByKey(".env", "APP_IMPORT_PATH")
 			// fmt.Println(theImportPath)
 			lines, err := helper.ScanLines("./main.go")
+
+			fmt.Println("Reading Routes API... ---done")
 			apiLines, err := helper.ScanLines("./routes/API.go")
 
 			helper.ErrorCheck(err)
+
+			fmt.Println("Implementing swagger.....")
 			// fmt.Println(lines)
 			read, err := ioutil.ReadFile("./main.go")
 			helper.ErrorCheck(err)
@@ -178,7 +192,7 @@ to quickly create a Cobra application.`,
 			// fmt.Println("called for update")
 			// update swag according to the updated data
 			fmt.Println(exec.Command("swag", "init").Run())
-
+			fmt.Println("Congretulation your application successfully documented by swagger!!!")
 		default:
 			fmt.Println("command not found!")
 		}

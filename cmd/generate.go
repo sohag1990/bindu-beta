@@ -20,6 +20,7 @@ import (
 
 	generate "github.com/bindu-bindu/bindu/Generate"
 	helper "github.com/bindu-bindu/bindu/Helper"
+	story "github.com/bindu-bindu/bindu/Story"
 	"github.com/spf13/cobra"
 )
 
@@ -35,6 +36,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		// to sanitize commands
 		var cli helper.CommandChain
 		cli = helper.InitialCli()
 		var flags = []helper.Flag{
@@ -45,6 +47,9 @@ to quickly create a Cobra application.`,
 			{Key: "hasManyThrough", Values: []string{fmt.Sprintf("%v", cmd.Flag("hasManyThrough").Value)}},
 			{Key: "belongsTo", Values: []string{fmt.Sprintf("%v", cmd.Flag("belongsTo").Value)}},
 		}
+		//Story writter
+		story.WriteStory("generate", args, flags)
+		// setter of cli to get from other page
 		cli.SetCli(args, flags)
 		generate.Generator(cmd, cli)
 
@@ -70,5 +75,6 @@ func init() {
 	generateCmd.Flags().String("hasOneThrough", "", "Has One Through Relationship")
 	generateCmd.Flags().String("hasManyThrough", "", "Has Many Through Relationship")
 	generateCmd.Flags().String("belongsTo", "", "Belongs to other model")
+	generateCmd.Flags().BoolP("update", "u", false, "Skip go get command")
 
 }

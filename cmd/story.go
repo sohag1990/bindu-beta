@@ -16,46 +16,43 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-
 	helper "github.com/bindu-bindu/bindu/Helper"
-	new "github.com/bindu-bindu/bindu/New"
+	story "github.com/bindu-bindu/bindu/Story"
 	"github.com/spf13/cobra"
 )
 
-// newCmd represents the new command
-var newCmd = &cobra.Command{
-	Use:   "new",
-	Short: "Create new project by given projectName",
-	Long:  `Generate a new project using given projectName`,
+// storyCmd represents the story command
+var storyCmd = &cobra.Command{
+	Use:   "story",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
+
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+
 		var cli helper.CommandChain
 		cli = helper.InitialCli()
-		var flags = []helper.Flag{
-			{Key: "app", Values: []string{fmt.Sprintf("%v", cmd.Flag("app").Value)}},
-			{Key: "db", Values: []string{fmt.Sprintf("%v", cmd.Flag("db").Value)}},
-			{Key: "port", Values: []string{fmt.Sprintf("%v", cmd.Flag("port").Value)}},
-		}
+		var flags = []helper.Flag{}
 		cli.SetCli(args, flags)
 		// fmt.Println(cli)
 		// return
-		new.New(cmd, cli)
+		story.Story(cmd, cli)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(newCmd)
+	rootCmd.AddCommand(storyCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// newCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// storyCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// newCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	newCmd.Flags().StringP("port", "p", "8080", "Run on specific port number default 8080. eg --p 9999")
-	newCmd.Flags().String("app", "Blank", "Prebuilt app name or slug or url\nAvailable Prebuilt app(Blank, Basic Web, Basic Api, Blog, E-Commerce, GRPC Server, GRPC Client)\neg. --app Blank")
-	newCmd.Flags().String("db", "", "db info eg. --db AdapterName:HostName:Port:DbName:DbUserName:DbPass")
+	// storyCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
