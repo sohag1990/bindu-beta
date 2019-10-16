@@ -37,8 +37,6 @@ var newCmd = &cobra.Command{
 			{Key: "port", Values: []string{fmt.Sprintf("%v", cmd.Flag("port").Value)}},
 		}
 		cli.SetCli(args, flags)
-		// fmt.Println(cli)
-		// return
 		new.New(cmd, cli)
 	},
 }

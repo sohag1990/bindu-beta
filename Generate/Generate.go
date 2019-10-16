@@ -99,57 +99,61 @@ func ModelGenerator(cmd *cobra.Command, c helper.CommandChain) {
 		helper.AppendLinesInFile(fp, lineAfter, newLines)
 	}
 	// Create the main model
+	modelName = strings.Title(modelName)
 	modelIfNotExistCreate(modelName, newLines)
+
 	for _, flg := range flags {
 		key := flg.Key
-		values := flg.Values
+		// SubcommandChain find the subcommand args
+		subcommandChain := helper.SubCommandChain(flg.Values)
 		// fmt.Println(values)
-		if key == "hasOne" && len(values[0]) > 0 {
-			splitData := strings.Split(values[0], "^")
-			firstModelArr := strings.Split(splitData[0], ":")
-			fModel := strings.Title(firstModelArr[0])
+		if key == "hasOne" && len(subcommandChain) > 0 {
+			// hasOne flags arguments commandChain format then find the args
+			hasOneModel := subcommandChain[0]
+
 			// append new lines to the main model
-			helper.AppendLinesInFile(fp, lineAfter, []string{"\t" + fModel + " " + fModel})
+			helper.AppendLinesInFile(fp, lineAfter, []string{"\t" + hasOneModel + " " + hasOneModel})
 			// create related hasOne model
-			modelIfNotExistCreate(fModel, []string{"\t" + args[1] + "ID uint64"})
+			modelIfNotExistCreate(hasOneModel, []string{"\t" + args[1] + "ID uint64"})
 		}
-		if key == "belongsTo" && len(values[0]) > 0 {
-			splitData := strings.Split(values[0], "^")
-			firstModelArr := strings.Split(splitData[0], ":")
+		if key == "belongsTo" && len(subcommandChain) > 0 {
+			// belongsTo flags arguments commandChain format then find the args
+			belongsToModel := subcommandChain[0]
+
 			// belongs to properties for main model
 			belongsToProps := []string{
-				"\t" + firstModelArr[0] + " " + firstModelArr[0],
-				"\t" + firstModelArr[0] + "ID   uint64",
+				"\t" + belongsToModel + " " + belongsToModel,
+				"\t" + belongsToModel + "ID   uint64",
 			}
 			// append line to main model
 			helper.AppendLinesInFile(fp, lineAfter, belongsToProps)
 			// belongs to model
-			modelIfNotExistCreate(firstModelArr[0], nil)
+			modelIfNotExistCreate(belongsToModel, nil)
 		}
-		if key == "hasMany" && len(values[0]) > 0 {
-			splitData := strings.Split(values[0], "^")
-			firstModelArr := strings.Split(splitData[0], ":")
+		if key == "hasMany" && len(subcommandChain) > 0 {
+			// hasManyModel flags arguments commandChain format then find the args
+			hasManyModel := subcommandChain[0]
 			// hasMany properties for main model
 			hasManyProps := []string{
-				"\t" + plural.Plural(firstModelArr[0]) + " []" + firstModelArr[0],
+				"\t" + plural.Plural(hasManyModel) + " []" + hasManyModel,
 			}
 			// append line to main model
 			helper.AppendLinesInFile(fp, lineAfter, hasManyProps)
 			// belongs to model
-			modelIfNotExistCreate(firstModelArr[0], []string{"\t" + modelName + "ID   uint64"})
+			modelIfNotExistCreate(hasManyModel, []string{"\t" + modelName + "ID   uint64"})
 		}
-		if key == "manyToMany" && len(values[0]) > 0 {
-			splitData := strings.Split(values[0], "^")
-			firstModelArr := strings.Split(splitData[0], ":")
+		if key == "manyToMany" && len(subcommandChain) > 0 {
+			// manyToManyModel flags arguments commandChain format then find the args
+			manyToManyModel := subcommandChain[0]
 			// manyToMany properties for main model
 			manyToManyProps := []string{
-				"\t" + plural.Plural(firstModelArr[0]) + " []" + firstModelArr[0] + " `gorm:\"many2many:" + strings.ToLower(args[1]) + "_" + plural.Plural(strings.ToLower(firstModelArr[0])) + ";association_foreignkey:id;foreignkey:id\"`",
+				"\t" + plural.Plural(manyToManyModel) + " []" + manyToManyModel + " `gorm:\"many2many:" + strings.ToLower(args[1]) + "_" + plural.Plural(strings.ToLower(manyToManyModel)) + ";association_foreignkey:id;foreignkey:id\"`",
 			}
 			// append line to main model
 			helper.AppendLinesInFile(fp, lineAfter, manyToManyProps)
 			// Crate manyToMany model if not exist
 			// manyToMany Relationship
-			modelIfNotExistCreate(firstModelArr[0], []string{"\t" + plural.Plural(args[1]) + " []" + args[1] + " `gorm:\"many2many:" + strings.ToLower(args[1]) + "_" + plural.Plural(strings.ToLower(firstModelArr[0])) + ";association_foreignkey:id;foreignkey:id\"`\n"})
+			modelIfNotExistCreate(manyToManyModel, []string{"\t" + plural.Plural(args[1]) + " []" + args[1] + " `gorm:\"many2many:" + strings.ToLower(args[1]) + "_" + plural.Plural(strings.ToLower(manyToManyModel)) + ";association_foreignkey:id;foreignkey:id\"`\n"})
 
 		}
 	}

@@ -117,6 +117,14 @@ func (c CLI) GetFlags() []Flag {
 
 }
 
+//SubCommandChain Subcommand/Flag value args clichain
+func SubCommandChain(args []string) []string {
+	var cli CommandChain
+	cli = InitialCli()
+	cli.SetCliArgs(args)
+	return cli.GetArgs()
+}
+
 // ArrayFind return true or false with int. first check the bool then use index, Because if not found item also return 0
 func ArrayFind(arr interface{}, keyword interface{}) (int, bool) {
 	arrV := reflect.ValueOf(arr)
