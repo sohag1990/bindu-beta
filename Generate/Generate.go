@@ -16,11 +16,14 @@ import (
 var u bool
 
 // Generator is a func to generate model controller and scaffold
-func Generator(cmd *cobra.Command, c helper.CommandChain) {
+func Generator(cmd *cobra.Command, cli helper.CommandChain) bool {
+	// To return a status true or false, whether code executed or not
+	// Deafult true
+	status := true
 	//--update flag check.
 	u, _ = strconv.ParseBool(fmt.Sprintf("%v", cmd.Flag("update").Value))
 	// User command args
-	args := c.GetArgs()
+	args := cli.GetArgs()
 
 	// flags := c.GetFlags()
 	genItems := []string{"Model", "Controller", "Scaffold", "Routes", "View"}
@@ -28,7 +31,7 @@ func Generator(cmd *cobra.Command, c helper.CommandChain) {
 	if len(args) == 0 {
 		_, actionName := helper.AskSelect("Select To Generate", genItems)
 		args = append(args, actionName)
-		c.SetCliArgs(args)
+		cli.SetCliArgs(args)
 	}
 
 	// check the first items is matched with predefined arg.. Controller, Model,,,etc
@@ -38,20 +41,20 @@ func Generator(cmd *cobra.Command, c helper.CommandChain) {
 		case 0:
 			// fmt.Printf("%v\n", "Action to generate new model")
 			// Model Generator
-			ModelGenerator(cmd, c)
+			status = ModelGenerator(cmd, cli)
 
 		case 1:
 			// fmt.Printf("%v\n", "Controller action")
-			ControllerGenerator(args)
-			RoutesGenerator(args)
+			status = ControllerGenerator(args)
+			status = RoutesGenerator(args)
 		case 2:
 			// fmt.Printf("%v\n", "Scaffold action")
-			ModelGenerator(cmd, c)
-			ControllerGenerator(args)
-			RoutesGenerator(args)
+			status = ModelGenerator(cmd, cli)
+			status = ControllerGenerator(args)
+			status = RoutesGenerator(args)
 		case 3:
 			// fmt.Printf("%v\n", "Routes action")
-			RoutesGenerator(args)
+			status = RoutesGenerator(args)
 			// case 4:
 			// 	fmt.Printf("%v\n", "View action")
 			// 	fmt.Printf("%v\n", args)
@@ -61,14 +64,15 @@ func Generator(cmd *cobra.Command, c helper.CommandChain) {
 		}
 
 	}
+	return status
 }
 
 // ModelGenerator to generate the model in project using the user inputs
-func ModelGenerator(cmd *cobra.Command, c helper.CommandChain) {
-
+func ModelGenerator(cmd *cobra.Command, cli helper.CommandChain) bool {
+	status := true
 	// get all others args and flags
-	args := c.GetArgs()
-	flags := c.GetFlags()
+	args := cli.GetArgs()
+	flags := cli.GetFlags()
 
 	plural := pluralize.NewClient()
 	modelName := args[1]
@@ -83,7 +87,7 @@ func ModelGenerator(cmd *cobra.Command, c helper.CommandChain) {
 		// check if genarator should update or modify files
 		if !u {
 			fmt.Println("Model already exist. If you want to update model,\nuse the --update or -u flag to add new or modify")
-			return
+			return false
 		}
 	}
 	// Create model if not exist, ofcouse not present at this moment, create one
@@ -100,73 +104,68 @@ func ModelGenerator(cmd *cobra.Command, c helper.CommandChain) {
 	}
 	// Create the main model
 	modelName = strings.Title(modelName)
-	modelIfNotExistCreate(modelName, newLines)
+	status = modelIfNotExistCreate(modelName, newLines)
 
 	for _, flg := range flags {
-		key := flg.Key
+		keyFlag := flg.Key
+		valueFlag := flg.Values
 		// SubcommandChain find the subcommand args
-		subcommandChain := helper.SubCommandChain(flg.Values)
-		// fmt.Println(values)
-		if key == "hasOne" && len(subcommandChain) > 0 {
-			// hasOne flags arguments commandChain format then find the args
-			hasOneModel := subcommandChain[0]
-
-			// append new lines to the main model
-			helper.AppendLinesInFile(fp, lineAfter, []string{"\t" + hasOneModel + " " + hasOneModel})
-			// create related hasOne model
-			modelIfNotExistCreate(hasOneModel, []string{"\t" + args[1] + "ID uint64"})
-		}
-		if key == "belongsTo" && len(subcommandChain) > 0 {
-			// belongsTo flags arguments commandChain format then find the args
-			belongsToModel := subcommandChain[0]
-
-			// belongs to properties for main model
-			belongsToProps := []string{
-				"\t" + belongsToModel + " " + belongsToModel,
-				"\t" + belongsToModel + "ID   uint64",
+		subcommandChain := helper.SubCommandChain(valueFlag)
+		// Check if subcommand exist then procced
+		if len(subcommandChain) > 0 {
+			// flags arguments commandChain first item is relationship model
+			relModel := subcommandChain[0]
+			if keyFlag == "hasOne" {
+				// append new lines to the main model
+				helper.AppendLinesInFile(fp, lineAfter, []string{"\t" + relModel + " " + relModel})
+				// create related hasOne model
+				status = modelIfNotExistCreate(relModel, []string{"\t" + args[1] + "ID uint64"})
 			}
-			// append line to main model
-			helper.AppendLinesInFile(fp, lineAfter, belongsToProps)
-			// belongs to model
-			modelIfNotExistCreate(belongsToModel, nil)
-		}
-		if key == "hasMany" && len(subcommandChain) > 0 {
-			// hasManyModel flags arguments commandChain format then find the args
-			hasManyModel := subcommandChain[0]
-			// hasMany properties for main model
-			hasManyProps := []string{
-				"\t" + plural.Plural(hasManyModel) + " []" + hasManyModel,
+			if keyFlag == "belongsTo" {
+				// belongs to properties for main model
+				belongsToProps := []string{
+					"\t" + relModel + " " + relModel,
+					"\t" + relModel + "ID   uint64",
+				}
+				// append line to main model
+				helper.AppendLinesInFile(fp, lineAfter, belongsToProps)
+				// belongs to model
+				status = modelIfNotExistCreate(relModel, nil)
 			}
-			// append line to main model
-			helper.AppendLinesInFile(fp, lineAfter, hasManyProps)
-			// belongs to model
-			modelIfNotExistCreate(hasManyModel, []string{"\t" + modelName + "ID   uint64"})
-		}
-		if key == "manyToMany" && len(subcommandChain) > 0 {
-			// manyToManyModel flags arguments commandChain format then find the args
-			manyToManyModel := subcommandChain[0]
-			// manyToMany properties for main model
-			manyToManyProps := []string{
-				"\t" + plural.Plural(manyToManyModel) + " []" + manyToManyModel + " `gorm:\"many2many:" + strings.ToLower(args[1]) + "_" + plural.Plural(strings.ToLower(manyToManyModel)) + ";association_foreignkey:id;foreignkey:id\"`",
+			if keyFlag == "hasMany" {
+				// hasMany properties for main model
+				hasManyProps := []string{
+					"\t" + plural.Plural(relModel) + " []" + relModel,
+				}
+				// append line to main model
+				helper.AppendLinesInFile(fp, lineAfter, hasManyProps)
+				// belongs to model
+				status = modelIfNotExistCreate(relModel, []string{"\t" + modelName + "ID   uint64"})
 			}
-			// append line to main model
-			helper.AppendLinesInFile(fp, lineAfter, manyToManyProps)
-			// Crate manyToMany model if not exist
-			// manyToMany Relationship
-			modelIfNotExistCreate(manyToManyModel, []string{"\t" + plural.Plural(args[1]) + " []" + args[1] + " `gorm:\"many2many:" + strings.ToLower(args[1]) + "_" + plural.Plural(strings.ToLower(manyToManyModel)) + ";association_foreignkey:id;foreignkey:id\"`\n"})
+			if keyFlag == "manyToMany" {
+				// manyToMany properties for main model
+				manyToManyProps := []string{
+					"\t" + plural.Plural(relModel) + " []" + relModel + " `gorm:\"many2many:" + strings.ToLower(args[1]) + "_" + plural.Plural(strings.ToLower(relModel)) + ";association_foreignkey:id;foreignkey:id\"`",
+				}
+				// append line to main model
+				helper.AppendLinesInFile(fp, lineAfter, manyToManyProps)
+				// Crate manyToMany model if not exist
+				// manyToMany Relationship
+				status = modelIfNotExistCreate(relModel, []string{"\t" + plural.Plural(args[1]) + " []" + args[1] + " `gorm:\"many2many:" + strings.ToLower(args[1]) + "_" + plural.Plural(strings.ToLower(relModel)) + ";association_foreignkey:id;foreignkey:id\"`\n"})
 
+			}
 		}
 	}
-
+	return status
 }
 
 // modelIfNotExistCreate create model if not exist input model and props as string line
-func modelIfNotExistCreate(model string, props []string) {
+func modelIfNotExistCreate(model string, props []string) bool {
 
 	path := "./app/models/" + model + ".go"
 	if helper.FileExists(path) {
 		fmt.Println("Failed to generate model!!! Model already exist.")
-		return
+		return false
 	}
 	fmt.Println("Model creating..." + path)
 	f, err := os.Create(path)
@@ -183,12 +182,13 @@ func modelIfNotExistCreate(model string, props []string) {
 	f.WriteString("}")
 	defer f.Close()
 	fmt.Println(".......Success!")
+	return true
 }
 
 // ControllerGenerator to generate the controller in project using the user inputs
-func ControllerGenerator(args []string) {
+func ControllerGenerator(args []string) bool {
 	// fmt.Println(args)
-
+	status := true
 	fmt.Println("Initializing Controller " + args[1])
 	newpath := filepath.Join(".", "app/controllers")
 	os.MkdirAll(newpath, os.ModePerm)
@@ -199,7 +199,7 @@ func ControllerGenerator(args []string) {
 	path := "./app/controllers/" + args[1] + "Controller.go"
 	if helper.FileExists(path) {
 		fmt.Println("Failed to generate controller!!!\nIf you want to update Controller,\nuse the --update or -u flag to add new or modify")
-		return
+		return false
 	}
 	// If controller not exist then generate
 	f, err := os.Create(path)
@@ -298,10 +298,15 @@ func ControllerGenerator(args []string) {
 	absPath, _ := filepath.Abs(newpath)
 	fmt.Println(absPath + "/" + args[1] + "Controller.go\n")
 
+	// if code succesfully exicute the return true
+	status = true
+	return status
 }
 
 // RoutesGenerator Routes generator
-func RoutesGenerator(args []string) {
+func RoutesGenerator(args []string) bool {
+
 	// routes not working... it should do first, find the fucname and append lines before return
-	helper.WriteRoutes("routes/API.go", args[1])
+	return helper.WriteRoutes("routes/API.go", args[1])
+
 }

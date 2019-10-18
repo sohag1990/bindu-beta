@@ -81,7 +81,7 @@ func (c *CLI) SetCliFlags(flags []Flag) {
 	c.Flags = flags
 }
 
-// CreateCli initialize CLI
+// InitialCli Initialize CLI
 func InitialCli() *CLI {
 	return &CLI{}
 }
@@ -327,7 +327,7 @@ func GetEnvValueByKey(path string, envKey string) string {
 }
 
 // WriteRoutes is to create routes taking path and routes main name
-func WriteRoutes(path string, routeName string) {
+func WriteRoutes(path string, routeName string) bool {
 	lines, err := ScanLines(path)
 	ErrorCheck(err)
 	var lineNumber int
@@ -372,6 +372,7 @@ func WriteRoutes(path string, routeName string) {
 			}
 
 		}
+
 	}
 
 	if lineNumber > 0 {
@@ -387,7 +388,7 @@ func WriteRoutes(path string, routeName string) {
 		AppendLinesInFile(path, lineAfter, newLines)
 		fmt.Println("Done!")
 	}
-
+	return true
 }
 
 // ScanLines read file and return a string array. Scan file for lines

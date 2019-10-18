@@ -16,15 +16,9 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
-
+	db "github.com/bindu-bindu/bindu/DB"
 	helper "github.com/bindu-bindu/bindu/Helper"
+	story "github.com/bindu-bindu/bindu/Story"
 	"github.com/spf13/cobra"
 )
 
@@ -39,6 +33,11 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		helper.IsInProjectDir()
+		// to sanitize commands
+		var cli helper.CommandChain
+		cli = helper.InitialCli()
+		cli.SetCliArgs(args)
 		// exmpl
 		// bindu db create con1
 		// bindu db migrate con1
@@ -47,92 +46,11 @@ to quickly create a Cobra application.`,
 		// bindu db rollback con1:tablename
 		// bindu db drop con1
 		// bindu db drop con1:tablename
-		helper.IsInProjectDir()
-		args = helper.SanitizeUserInput(args)
-		argsLen := len(args)
-		switch {
-		case args[0] == "Create":
-			if argsLen > 1 {
-				if strings.Contains(args[1], ":") {
-					fmt.Println("Wrong argument provided!")
-				} else {
-					fmt.Println("Create command not ready yet...")
-					// conName := args[1]
-					// fmt.Println(conName)
-					// Create database connection file accordingly user data
-					// f, err := os.Create("./db/" + conName + ".go")
-					// helper.ErrorCheck(err)
-					// defer f.Close()
-				}
-			}
-		case strings.Contains(args[0], "Migrate"):
-			if strings.Contains(args[0], ":") {
-				splitStr := strings.Split(args[0], ":")
-				tableName := strings.Title(splitStr[1])
-				// Migrate database connection file accordingly user data
 
-				newpath := filepath.Join(".", "db/migrations")
-				// create directory if not exists
-				os.MkdirAll(newpath, os.ModePerm)
-				y, m, d := time.Now().Date()
-				nanoSeco := time.Now().Nanosecond()
-				fileName := args[0] + strconv.Itoa(y) + m.String() + strconv.Itoa(d) + "-" + strconv.Itoa(nanoSeco) + ".go"
-				fullPathFileName := filepath.Join(".", newpath+"/"+fileName)
-				f, e := os.Create(fullPathFileName)
-				helper.ErrorCheck(e)
-				// fmt.Printf("%T", f)
-				f.WriteString("package main\n\n")
-				f.WriteString("import (\n")
-				f.WriteString("\t\"" + helper.GetEnvValueByKey(".env", "APP_IMPORT_PATH") + "/app/models\"\n")
-				f.WriteString("\t\"" + helper.GetEnvValueByKey(".env", "APP_IMPORT_PATH") + "/bindu\"\n")
-				f.WriteString("\t\"" + helper.GetEnvValueByKey(".env", "APP_IMPORT_PATH") + "/db\"\n")
-				f.WriteString(")\n\n")
-
-				f.WriteString("func main() {\n")
-				f.WriteString("\tbindu.Init()\n")
-				f.WriteString("\tdb.Con()\n")
-				f.WriteString("\t" + "db.DB.AutoMigrate(models." + tableName + "{})\n")
-				f.WriteString("\tdefer db.DB.Close()\n")
-				f.WriteString("}")
-				defer f.Close()
-				fmt.Println("migration file created: " + fullPathFileName)
-				// Lets run the migration
-				serverRunCMD := exec.Command("go", "run", "./"+fullPathFileName)
-				err := serverRunCMD.Run()
-				helper.ErrorCheck(err)
-			} else {
-				newpath := filepath.Join(".", "db/migrations")
-				// create directory if not exists
-				os.MkdirAll(newpath, os.ModePerm)
-				y, m, d := time.Now().Date()
-				nanoSeco := time.Now().Nanosecond()
-				fileName := args[0] + strconv.Itoa(y) + m.String() + strconv.Itoa(d) + "-" + strconv.Itoa(nanoSeco) + ".go"
-				fullPathFileName := filepath.Join(".", newpath+"/"+fileName)
-				f, e := os.Create(fullPathFileName)
-				helper.ErrorCheck(e)
-				// fmt.Printf("%T", f)
-				f.WriteString("package main\n\n")
-				f.WriteString("import (\n")
-				f.WriteString("\t\"" + helper.GetEnvValueByKey(".env", "APP_IMPORT_PATH") + "/app/models\"\n")
-				f.WriteString("\t\"" + helper.GetEnvValueByKey(".env", "APP_IMPORT_PATH") + "/bindu\"\n")
-				f.WriteString("\t\"" + helper.GetEnvValueByKey(".env", "APP_IMPORT_PATH") + "/db\"\n")
-				f.WriteString(")\n\n")
-
-				f.WriteString("func main() {\n")
-				f.WriteString("\tbindu.Init()\n")
-				f.WriteString("\tdb.Con()\n")
-				helper.ScanDirFindLine("./app/", "type", f)
-				f.WriteString("\tdefer db.DB.Close()\n")
-				f.WriteString("}")
-				defer f.Close()
-				fmt.Println("migration file created: " + fullPathFileName)
-				// Lets run the migration
-				serverRunCMD := exec.Command("go", "run", "./"+fullPathFileName)
-				err := serverRunCMD.Run()
-				helper.ErrorCheck(err)
-			}
-
-		}
+		// Story writter
+		// if the command execute return true,
+		// so the story can know that command was success or failed
+		story.WriteStory("db", cli, db.DbMigrate(cmd, cli))
 	},
 }
 

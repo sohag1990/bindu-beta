@@ -21,6 +21,7 @@ import (
 	"os/exec"
 
 	helper "github.com/bindu-bindu/bindu/Helper"
+	story "github.com/bindu-bindu/bindu/Story"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +36,13 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+
 		helper.IsInProjectDir()
+		// to sanitize commands
+		var cli helper.CommandChain
+		cli = helper.InitialCli()
+		cli.SetCliArgs(args)
+
 		fmt.Println("checking internet connection....")
 		_, err := net.Dial("tcp", "github.com:443")
 		helper.ErrorCheck(err)
@@ -43,11 +50,10 @@ to quickly create a Cobra application.`,
 		out, err := exec.Command("go", "get").Output()
 		fmt.Println("Output: ", out, err)
 
-		// m, _ := cmd.Flags().GetString("migration")
-		// if m == "" {
-		// 	m = "World"
-		// }
-		// fmt.Println("Hallo " + m)
+		// Story writter
+		// if the command execute return true,
+		// so the story can know that command was success or failed
+		story.WriteStory("install", cli, true)
 	},
 }
 

@@ -17,6 +17,7 @@ package cmd
 
 import (
 	helper "github.com/bindu-bindu/bindu/Helper"
+	story "github.com/bindu-bindu/bindu/Story"
 	"github.com/spf13/cobra"
 )
 
@@ -31,6 +32,12 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		helper.IsInProjectDir()
+		// to sanitize commands
+		var cli helper.CommandChain
+		cli = helper.InitialCli()
+		cli.SetCliArgs(args)
+
 		// need to work on this command like : bindu fix path then oldpath  and new path lots of work
 		// there is bug fix should be automated.
 		// App_IMPort path should be automated not picked form env
@@ -38,6 +45,11 @@ to quickly create a Cobra application.`,
 		// New project create korar shomoy full dirrectory name match na korleo rename hoy jacce should be fix
 		theImportPath := helper.GetEnvValueByKey(".env", "APP_IMPORT_PATH")
 		helper.FixImportPath("github.com/bindu-bindu/bindu-blank/", theImportPath+"/")
+
+		// Story writter
+		// if the command execute return true,
+		// so the story can know that command was success or failed
+		story.WriteStory("fix", cli, true)
 	},
 }
 

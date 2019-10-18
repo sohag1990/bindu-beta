@@ -23,7 +23,23 @@ func Story(cmd *cobra.Command, c helper.CommandChain) {
 }
 
 // WriteStory Write Command Story
-func WriteStory(cName string, args []string, flags []helper.Flag) {
+func WriteStory(cName string, cli helper.CommandChain, status bool) {
+
+	args := cli.GetArgs()
+	flags := cli.GetFlags()
+
+	line := strings.Join(args, " ") + " "
+	fl := ""
+	for _, f := range flags {
+
+		for _, fv := range f.Values {
+			// if the flag has value then add in story line
+			if len(fv) > 0 {
+				fl = fl + "--" + f.Key + " " + fv + " "
+			}
+		}
+	}
+	line = line + fl + "#" + fmt.Sprintf("%v", status)
 	path := "./bindu/story.sh"
-	helper.AppendLastLine(path, "bindu "+cName+" "+strings.Join(args, " "))
+	helper.AppendLastLine(path, "bindu "+cName+" "+line)
 }

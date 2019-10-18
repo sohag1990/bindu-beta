@@ -13,9 +13,9 @@ import (
 )
 
 // New project create proccess
-func New(cmd *cobra.Command, c helper.CommandChain) {
+func New(cmd *cobra.Command, c helper.CommandChain) bool {
 	if !helper.NetCheck() {
-		return
+		return false
 	}
 
 	// ENV VARIABLES to catch user input data
@@ -164,7 +164,8 @@ func New(cmd *cobra.Command, c helper.CommandChain) {
 	writtingEnvFileForNewProject(envApp, envDb, envLog)
 	fmt.Println("Env file created")
 	fmt.Println("Congretulations!!! your new project successfully created.")
-
+	// return true
+	return true
 }
 
 // Writting env file for new project

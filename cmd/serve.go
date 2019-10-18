@@ -20,6 +20,7 @@ import (
 	"os/exec"
 
 	helper "github.com/bindu-bindu/bindu/Helper"
+	story "github.com/bindu-bindu/bindu/Story"
 	"github.com/spf13/cobra"
 )
 
@@ -35,17 +36,26 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		helper.IsInProjectDir()
+		// to sanitize commands
+		var cli helper.CommandChain
+		cli = helper.InitialCli()
+		cli.SetCliArgs(args)
+
 		fmt.Println("Bindu server running on:")
 		p, _ := cmd.Flags().GetString("port")
 		if p == "" {
 			p = "8080"
 		}
 		fmt.Println("localhost:" + p)
-		serverRun()
+		// Story writter
+		// if the command execute return true,
+		// so the story can know that command was success or failed
+		story.WriteStory("serve", cli, serverRun())
+
 	},
 }
 
-func serverRun() {
+func serverRun() bool {
 	dependencyCmd := exec.Command("go", "get")
 	err := dependencyCmd.Run()
 	helper.ErrorCheck(err)
@@ -56,7 +66,7 @@ func serverRun() {
 	serverRunCMD = exec.Command("Hello")
 	err = serverRunCMD.Run()
 	helper.ErrorCheck(err)
-
+	return true
 }
 func init() {
 	rootCmd.AddCommand(serveCmd)

@@ -20,6 +20,7 @@ import (
 
 	helper "github.com/bindu-bindu/bindu/Helper"
 	new "github.com/bindu-bindu/bindu/New"
+	story "github.com/bindu-bindu/bindu/Story"
 	"github.com/spf13/cobra"
 )
 
@@ -29,6 +30,7 @@ var newCmd = &cobra.Command{
 	Short: "Create new project by given projectName",
 	Long:  `Generate a new project using given projectName`,
 	Run: func(cmd *cobra.Command, args []string) {
+
 		var cli helper.CommandChain
 		cli = helper.InitialCli()
 		var flags = []helper.Flag{
@@ -37,7 +39,10 @@ var newCmd = &cobra.Command{
 			{Key: "port", Values: []string{fmt.Sprintf("%v", cmd.Flag("port").Value)}},
 		}
 		cli.SetCli(args, flags)
-		new.New(cmd, cli)
+		// Story writter
+		// if the command execute return true,
+		// so the story can know that command was success or failed
+		story.WriteStory("new", cli, new.New(cmd, cli))
 	},
 }
 

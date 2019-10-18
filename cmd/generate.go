@@ -35,7 +35,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
+		helper.IsInProjectDir()
 		// to sanitize commands
 		var cli helper.CommandChain
 		cli = helper.InitialCli()
@@ -47,27 +47,20 @@ to quickly create a Cobra application.`,
 			{Key: "hasManyThrough", Values: []string{fmt.Sprintf("%v", cmd.Flag("hasManyThrough").Value)}},
 			{Key: "belongsTo", Values: []string{fmt.Sprintf("%v", cmd.Flag("belongsTo").Value)}},
 		}
-		//Story writter
-		story.WriteStory("generate", args, flags)
+
 		// setter of cli to get from other page
 		cli.SetCli(args, flags)
-		generate.Generator(cmd, cli)
+
+		// Story writter
+		// if the command execute return true,
+		// so the story can know that command was success or failed
+		story.WriteStory("generate", cli, generate.Generator(cmd, cli))
 
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(generateCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// generateCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// generateCmd.Flags().BoolP("controller", "c", false, "Help message for Generate controller")
 
 	generateCmd.Flags().String("hasOne", "", "HasOne Relationship")
 	generateCmd.Flags().String("hasMany", "", "HasMany Relationship")
