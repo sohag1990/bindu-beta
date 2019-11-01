@@ -20,7 +20,7 @@ func DbMigrate(cmd *cobra.Command, cli helper.CommandChain) bool {
 	switch {
 	case args[0] == "Create":
 		if argsLen > 1 {
-			if strings.Contains(args[1], ":") {
+			if helper.StringsContains(args[1], ":") {
 				fmt.Println("Wrong argument provided!")
 			} else {
 				fmt.Println("Create command not ready yet...")
@@ -33,8 +33,8 @@ func DbMigrate(cmd *cobra.Command, cli helper.CommandChain) bool {
 				return false
 			}
 		}
-	case strings.Contains(args[0], "Migrate"):
-		if strings.Contains(args[0], ":") {
+	case helper.StringsContains(args[0], "Migrate"):
+		if helper.StringsContains(args[0], ":") {
 			splitStr := strings.Split(args[0], ":")
 			tableName := strings.Title(splitStr[1])
 			// Migrate database connection file accordingly user data
@@ -89,7 +89,7 @@ func DbMigrate(cmd *cobra.Command, cli helper.CommandChain) bool {
 			f.WriteString("func main() {\n")
 			f.WriteString("\tbindu.Init()\n")
 			f.WriteString("\tdb.Con()\n")
-			helper.ScanDirFindLine("./app/", "type", f)
+			helper.ScanDirFindLine("./app/", "struct", f)
 			f.WriteString("\tdefer db.DB.Close()\n")
 			f.WriteString("}")
 			defer f.Close()
@@ -99,7 +99,6 @@ func DbMigrate(cmd *cobra.Command, cli helper.CommandChain) bool {
 			err := serverRunCMD.Run()
 			helper.ErrorCheck(err)
 		}
-
 	}
 	return true
 }

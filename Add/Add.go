@@ -55,10 +55,10 @@ func AddSwagger(cmd *cobra.Command, cli helper.CommandChain) bool {
 		// fmt.Println(lines)
 
 		// fmt.Println(line)
-		if !(strings.Contains(string(read), "/docs")) {
+		if !(helper.StringsContains(string(read), "/docs")) {
 
 			for i, line := range lines {
-				if strings.Contains(line, "import (") || strings.Contains(line, "import(") {
+				if helper.StringsContains(line, "import (") || helper.StringsContains(line, "import(") {
 					var newLines []string
 					newLines = append(newLines, lines[:i+1]...)
 					newLines = append(newLines, "_ \""+theImportPath+"/docs\"")
@@ -70,9 +70,9 @@ func AddSwagger(cmd *cobra.Command, cli helper.CommandChain) bool {
 
 			}
 		}
-		if !(strings.Contains(string(read), "swaggo/files")) {
+		if !(helper.StringsContains(string(read), "swaggo/files")) {
 			for i, line := range lines {
-				if strings.Contains(line, "import (") || strings.Contains(line, "import(") {
+				if helper.StringsContains(line, "import (") || helper.StringsContains(line, "import(") {
 					var newLines []string
 					newLines = append(newLines, lines[:i+1]...)
 					newLines = append(newLines, "swaggerFiles \"github.com/swaggo/files\"")
@@ -84,10 +84,10 @@ func AddSwagger(cmd *cobra.Command, cli helper.CommandChain) bool {
 
 			}
 		}
-		if !(strings.Contains(string(read), "swaggo/gin-swagger")) {
+		if !(helper.StringsContains(string(read), "swaggo/gin-swagger")) {
 
 			for i, line := range lines {
-				if strings.Contains(line, "import (") || strings.Contains(line, "import(") {
+				if helper.StringsContains(line, "import (") || helper.StringsContains(line, "import(") {
 					var newLines []string
 					newLines = append(newLines, lines[:i+1]...)
 					newLines = append(newLines, "ginSwagger \"github.com/swaggo/gin-swagger\"")
@@ -99,10 +99,10 @@ func AddSwagger(cmd *cobra.Command, cli helper.CommandChain) bool {
 
 			}
 		}
-		if !(strings.Contains(string(read), "@title")) {
+		if !(helper.StringsContains(string(read), "@title")) {
 
 			for i, line := range lines {
-				if strings.Contains(line, "main()") || strings.Contains(line, "func main()") {
+				if helper.StringsContains(line, "main()") || helper.StringsContains(line, "func main()") {
 					var newLines []string
 					newLines = append(newLines, lines[:i+1]...)
 					newLines = append(newLines, "\t// eg. http://localhost:"+helper.GetEnvValueByKey(".env", "APP_PORT")+"/swagger/index.html")
@@ -124,10 +124,10 @@ func AddSwagger(cmd *cobra.Command, cli helper.CommandChain) bool {
 
 			}
 		}
-		if !(strings.Contains(string(read), "ginSwagger.URL")) {
+		if !(helper.StringsContains(string(read), "ginSwagger.URL")) {
 
 			for i, line := range lines {
-				if strings.Contains(line, "gin.Default()") || strings.Contains(line, "gin.New()") {
+				if helper.StringsContains(line, "gin.Default()") || helper.StringsContains(line, "gin.New()") {
 					var newLines []string
 					newLines = append(newLines, lines[:i+1]...)
 					newLines = append(newLines, "\turl := ginSwagger.URL(\"http://localhost:"+helper.GetEnvValueByKey(".env", "APP_PORT")+"/swagger/doc.json\") // The url pointing to API definition")
@@ -146,7 +146,7 @@ func AddSwagger(cmd *cobra.Command, cli helper.CommandChain) bool {
 		// add autogen documentations for controllers according to the routes actions
 		for _, apiLine := range apiLines {
 			// filter only routes
-			if strings.Contains(apiLine, "r.") {
+			if helper.StringsContains(apiLine, "r.") {
 				apiRouteSplit := strings.Split(apiLine, ".")
 				routeMethodSplit := strings.Split(apiRouteSplit[1], "(")
 				routeMethodName := routeMethodSplit[0]

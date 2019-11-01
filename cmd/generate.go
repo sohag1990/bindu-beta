@@ -46,9 +46,12 @@ to quickly create a Cobra application.`,
 			{Key: "hasOneThrough", Values: []string{fmt.Sprintf("%v", cmd.Flag("hasOneThrough").Value)}},
 			{Key: "hasManyThrough", Values: []string{fmt.Sprintf("%v", cmd.Flag("hasManyThrough").Value)}},
 			{Key: "belongsTo", Values: []string{fmt.Sprintf("%v", cmd.Flag("belongsTo").Value)}},
+			{Key: "middleware", Values: []string{fmt.Sprintf("%v", cmd.Flag("middleware").Value)}},
+			{Key: "group", Values: []string{fmt.Sprintf("%v", cmd.Flag("group").Value)}},
 		}
 
 		// setter of cli to get from other page
+
 		cli.SetCli(args, flags)
 
 		// Story writter
@@ -68,6 +71,8 @@ func init() {
 	generateCmd.Flags().String("hasOneThrough", "", "Has One Through Relationship")
 	generateCmd.Flags().String("hasManyThrough", "", "Has Many Through Relationship")
 	generateCmd.Flags().String("belongsTo", "", "Belongs to other model")
-	generateCmd.Flags().BoolP("update", "u", false, "Skip go get command")
+	generateCmd.Flags().BoolP("update", "u", false, "Skip go get command. -u=true")
+	generateCmd.Flags().StringP("middleware", "m", "", "Define middleware which. -a=false")
+	generateCmd.Flags().StringP("group", "g", "", "API Group: Define a api group. eg. v1 or v2 etc, -g=v2")
 
 }

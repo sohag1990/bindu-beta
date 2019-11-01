@@ -2,6 +2,8 @@ package new
 
 import (
 	"strings"
+
+	helper "github.com/bindu-bindu/bindu/Helper"
 )
 
 // PrebuiltApps Data
@@ -38,7 +40,7 @@ func FindPrebuitAppIndex(keyword string) (int, bool) {
 			return i, true
 		}
 	}
-	if strings.Contains(strings.ToLower(keyword), "https://") {
+	if helper.StringsContains(strings.ToLower(keyword), "https://") {
 		return len(PreBuiltApps) - 1, true
 	}
 	return 0, false
