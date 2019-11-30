@@ -159,9 +159,20 @@ func New(cmd *cobra.Command, c helper.CommandChain) bool {
 	helper.CD(envApp.APP_NAME)
 	// fmt.Println("Enter into the new project " + envApp.APP_NAME)
 	// Migrate import path. must after CD inside the project directory
+	// Fix go.mod
+	// Rename core project mod files
+	helper.ErrorCheck(os.Rename("go.mod", "go.mod."+time.Now().String()))
+	// run mod init command
+	cmdModInit := exec.Command("go", "mod", "init")
+	helper.ErrorCheck(cmdModInit.Run())
+	// run mod tidy command
+	cmdModTidy := exec.Command("go", "mod", "tidy")
+	helper.ErrorCheck(cmdModTidy.Run())
+	//fix importpath
 	helper.FixImportPath(oldImportPath, envApp.APP_IMPORT_PATH)
 	// Createing env file according to the user data
 	writtingEnvFileForNewProject(envApp, envDb, envLog)
+
 	fmt.Println("Env file created")
 	fmt.Println("Congretulations!!! your new project successfully created.")
 	// return true
