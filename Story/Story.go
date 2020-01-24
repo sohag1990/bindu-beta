@@ -39,6 +39,8 @@ func WriteStory(cName string, cli helper.CommandChain, status bool) {
 			}
 		}
 	}
+	// fmt.Println( cmd.Flag("update").Value)
+	fmt.Println(flags)
 	line = line + fl + "#" + fmt.Sprintf("%v", status)
 	path := "./bindu/story.sh"
 	helper.AppendLastLine(path, "bindu "+cName+" "+line)
