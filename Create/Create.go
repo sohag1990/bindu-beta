@@ -61,11 +61,15 @@ func UserCreate(cmd *cobra.Command, cli helper.CommandChain) bool {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
-	db, err := gorm.Open(os.Getenv("DB_ADAPTER"), os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@tcp("+os.Getenv("DB_HOST")+":"+os.Getenv("DB_PORT")+")/"+os.Getenv("DB_DATABASE")+"?charset=utf8&parseTime=True&loc=Local")
-	helper.ErrorCheck(err)
-	defer db.Close()
 	status := true
+	db, err := gorm.Open(os.Getenv("DB_ADAPTER"), os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@tcp("+os.Getenv("DB_HOST")+":"+os.Getenv("DB_PORT")+")/"+os.Getenv("DB_DATABASE")+"?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		helper.ErrorCheck(err)
+		status = false
+	}
+
+	defer db.Close()
+
 	// get all others args and flags
 	args := cli.GetArgs()
 	// flags := cli.GetFlags()
@@ -84,7 +88,7 @@ func UserCreate(cmd *cobra.Command, cli helper.CommandChain) bool {
 		case p[0] == "Password" || p[0] == "PassWord":
 			user.Password = p[1]
 		case p[0] == "Role" || p[0] == "Rule":
-			user.Role = p[1]
+			user.Role = strings.ToLower(p[1])
 
 		}
 	}
