@@ -99,8 +99,12 @@ func DbMigrate(cmd *cobra.Command, cli helper.CommandChain) bool {
 			err := serverRunCMD.Run()
 			if err != nil {
 				fmt.Println("Database error, First check database connection, if db connection is ok then debug the migration file.")
+				helper.ErrorCheck(err)
+				return false
+			} else {
+				fmt.Println("DB Migration succesfull!")
 			}
-			helper.ErrorCheck(err)
+
 		}
 	}
 	return true

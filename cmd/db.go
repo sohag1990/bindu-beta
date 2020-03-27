@@ -50,6 +50,7 @@ to quickly create a Cobra application.`,
 		// Story writter
 		// if the command execute return true,
 		// so the story can know that command was success or failed
+
 		story.WriteStory("db", cli, db.DbMigrate(cmd, cli))
 	},
 }
