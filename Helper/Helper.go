@@ -93,10 +93,12 @@ func (c *CLI) GetArgs() []string {
 		splitArg := strings.Split(arg, ",")
 		if len(splitArg) > 1 {
 			for _, cItem := range splitArg {
-				newArgs = append(newArgs, strings.Title(cItem))
+				newArgs = append(newArgs, cItem)
+
 			}
 		} else {
-			newArgs = append(newArgs, strings.Title(arg))
+			newArgs = append(newArgs, arg)
+
 		}
 	}
 	c.Args = newArgs
@@ -151,11 +153,11 @@ func SanitizeUserInputReArry(args []string) []string {
 		// fmt.Println(len(commaSepToArray))
 		if len(commaSepToArray) > 1 {
 			for _, cItem := range commaSepToArray {
-				reArray = append(reArray, strings.Title(cItem))
+				reArray = append(reArray, cItem)
 				j++
 			}
 		} else {
-			reArray = append(reArray, strings.Title(arg))
+			reArray = append(reArray, arg)
 			j++
 		}
 
@@ -171,7 +173,7 @@ func SanitizeUserInputReArry(args []string) []string {
 		ErrorCheck(err)
 		var newArray []string
 		newArray = append(newArray, reArray[0])
-		newArray = append(newArray, strings.Title(argName))
+		newArray = append(newArray, argName)
 		newArray = append(newArray, reArray[1:]...)
 		reArray = newArray
 	}
@@ -192,11 +194,11 @@ func SanitizeUserInput(args []string) []string {
 		// fmt.Println(len(commaSepToArray))
 		if len(commaSepToArray) > 1 {
 			for _, cItem := range commaSepToArray {
-				reArray = append(reArray, strings.Title(cItem))
+				reArray = append(reArray, cItem)
 				j++
 			}
 		} else {
-			reArray = append(reArray, strings.Title(arg))
+			reArray = append(reArray, arg)
 			j++
 		}
 

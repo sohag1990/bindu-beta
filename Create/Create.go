@@ -82,14 +82,15 @@ func UserCreate(cmd *cobra.Command, cli helper.CommandChain) bool {
 	// plural := pluralize.NewClient()
 	for _, prop := range args[1:] {
 		p := strings.Split(prop, ":")
-		switch {
-		case p[0] == "Username" || p[0] == "UserName":
-			user.Username = p[1]
-		case p[0] == "Password" || p[0] == "PassWord":
-			user.Password = p[1]
-		case p[0] == "Role" || p[0] == "Rule":
-			user.Role = strings.ToLower(p[1])
 
+		key := strings.ToLower(p[0])
+		switch {
+		case key == "username":
+			user.Username = strings.ToLower(p[1]) //username always lowercase
+		case key == "password":
+			user.Password = p[1]
+		case key == "role":
+			user.Role = strings.ToLower(p[1]) // role always lowercase
 		}
 	}
 
