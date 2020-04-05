@@ -94,7 +94,10 @@ func UserCreate(cmd *cobra.Command, cli helper.CommandChain) bool {
 		}
 	}
 
-	db.Create(&user)
+	if err := db.Create(&user).Error; err != nil {
+		fmt.Println("Error Happend! ", err)
+	}
+
 	fmt.Println("User Created Successfully!")
 	return status
 }
