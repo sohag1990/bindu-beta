@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	helper "github.com/bindu-bindu/bindu/Helper"
+	story "github.com/bindu-bindu/bindu/Story"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/joho/godotenv"
@@ -95,10 +96,12 @@ func UserCreate(cmd *cobra.Command, cli helper.CommandChain) bool {
 	}
 
 	if err := db.Create(&user).Error; err != nil {
-		fmt.Println("Error Happend! ", err)
+		fmt.Println("Error Happend! called ", err)
+		// story.UpdateThisStoryStatus("false: " + err.Error())
+	} else {
+		fmt.Println("User Created Successfully!")
+		// story.UpdateThisStoryStatus("true: User Created")
 	}
-
-	fmt.Println("User Created Successfully!")
 	return status
 }
 
@@ -108,10 +111,14 @@ func PolicyCreate(cmd *cobra.Command, cli helper.CommandChain) bool {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
+		story.UpdateThisStoryStatus("false: .env file can't load, " + err.Error())
 	}
 
 	db, err := gorm.Open(os.Getenv("DB_ADAPTER"), os.Getenv("DB_USERNAME")+":"+os.Getenv("DB_PASSWORD")+"@tcp("+os.Getenv("DB_HOST")+":"+os.Getenv("DB_PORT")+")/"+os.Getenv("DB_DATABASE")+"?charset=utf8&parseTime=True&loc=Local")
-	helper.ErrorCheck(err)
+	if err != nil {
+		helper.ErrorCheck(err)
+		story.UpdateThisStoryStatus("false: .env file can't load, " + err.Error())
+	}
 	defer db.Close()
 	status := true
 	// get all others args and flags
@@ -121,23 +128,35 @@ func PolicyCreate(cmd *cobra.Command, cli helper.CommandChain) bool {
 	var rule CasbinRule
 	// plural := pluralize.NewClient()
 	for _, prop := range args[1:] {
-		p := strings.Split(prop, ":")
+
+		p := strings.Split(strings.ToLower(prop), ":")
+
 		switch {
-		case p[0] == "Alice" || p[0] == "Role" || p[0] == "Policy" || p[0] == "Rule" || p[0] == "PType" || p[0] == "Ptype":
+		case p[0] == "alice" || p[0] == "role" || p[0] == "policy" || p[0] == "rule" || p[0] == "ptype":
 			rule.PType = strings.ToLower(p[1])
-		case p[0] == "Sub" || p[0] == "v0" || p[0] == "V0":
+		case p[0] == "sub" || p[0] == "v0":
 			rule.V0 = strings.ToLower(p[1])
-		case p[0] == "Obj" || p[0] == "v1" || p[0] == "V1":
+		case p[0] == "obj" || p[0] == "v1":
 			rule.V1 = strings.ToLower(p[1])
-		case p[0] == "Act" || p[0] == "v2" || p[0] == "V2":
+		case p[0] == "act" || p[0] == "v2":
 			// act like GET, POST so do not lower case
 			rule.V2 = p[1]
-
 		}
 	}
-	fmt.Println(rule)
-	db.Create(&rule)
-	fmt.Println("Policy Created Successfully!")
+	var ruleExistCount int
+	db.Model(&CasbinRule{}).Where("p_type=? and v0=? and v1=? and v2=?", rule.PType, rule.V0, rule.V1, rule.V2).Count(&ruleExistCount)
+	if ruleExistCount > 0 {
+		fmt.Println("Error Plicy already exist")
+		story.UpdateThisStoryStatus("false: Policy Already Exist")
+	} else {
+		if err := db.Create(&rule).Error; err != nil {
+			story.UpdateThisStoryStatus("false: Err " + err.Error())
+			fmt.Println("Failed to create policy")
+		} else {
+			story.UpdateThisStoryStatus("true: Policy Created")
+			fmt.Println("Policy Created Successfully!")
+		}
+	}
 	return status
 }
 

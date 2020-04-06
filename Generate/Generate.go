@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	helper "github.com/bindu-bindu/bindu/Helper"
+	story "github.com/bindu-bindu/bindu/Story"
 	"github.com/gertd/go-pluralize"
 	"github.com/spf13/cobra"
 )
@@ -127,6 +128,7 @@ func ModelGenerator(cmd *cobra.Command, cli helper.CommandChain) bool {
 		// check if genarator should update or modify files
 		if !u {
 			fmt.Println("Model already exist. If you want to update model,\nuse the --update or -u flag to add new or modify")
+			story.UpdateThisStoryStatus("false: '" + modelName + "' Model Already exist!")
 			return false
 		}
 	}
@@ -222,6 +224,7 @@ func modelIfNotExistCreate(model string, props []string) bool {
 	f.WriteString("}")
 	defer f.Close()
 	fmt.Println(".......Success!")
+	story.UpdateThisStoryStatus("true: '" + model + "' Created")
 	return true
 }
 
@@ -242,6 +245,7 @@ func ControllerGenerator(args []string) bool {
 	path := "./app/controllers/" + args[1] + "Controller.go"
 	if helper.FileExists(path) {
 		fmt.Println("Failed to generate controller!!!\nIf you want to update Controller,\nuse the --update or -u flag to add new or modify")
+		story.UpdateThisStoryStatus("false: Already Exist (-u To Update) '" + path + "' ")
 		return false
 	}
 	// If controller not exist then generate
@@ -355,6 +359,7 @@ func ControllerGenerator(args []string) bool {
 
 	// if code succesfully exicute the return true
 	status = true
+	story.UpdateThisStoryStatus("true: Controller Created '" + args[1] + "'")
 	return status
 }
 

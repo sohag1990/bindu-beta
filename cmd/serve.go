@@ -50,7 +50,8 @@ to quickly create a Cobra application.`,
 		// Story writter
 		// if the command execute return true,
 		// so the story can know that command was success or failed
-		story.WriteStory("serve", cli, serverRun())
+		story.WriteStory("serve", cli)
+		serverRun()
 
 	},
 }

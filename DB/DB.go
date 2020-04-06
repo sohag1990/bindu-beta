@@ -10,6 +10,7 @@ import (
 	"time"
 
 	helper "github.com/bindu-bindu/bindu/Helper"
+	story "github.com/bindu-bindu/bindu/Story"
 	"github.com/spf13/cobra"
 )
 
@@ -30,6 +31,7 @@ func DbMigrate(cmd *cobra.Command, cli helper.CommandChain) bool {
 				// f, err := os.Create("./db/" + conName + ".go")
 				// helper.ErrorCheck(err)
 				// defer f.Close()
+				story.UpdateThisStoryStatus("false: Create Command not ready yet!")
 				return false
 			}
 		}
@@ -103,6 +105,7 @@ func DbMigrate(cmd *cobra.Command, cli helper.CommandChain) bool {
 				return false
 			} else {
 				fmt.Println("DB Migration succesfull!")
+				story.UpdateThisStoryStatus("true: DB Migrated " + fullPathFileName)
 			}
 
 		}

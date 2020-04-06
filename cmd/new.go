@@ -42,7 +42,8 @@ var newCmd = &cobra.Command{
 		// Story writter
 		// if the command execute return true,
 		// so the story can know that command was success or failed
-		story.WriteStory("new", cli, new.New(cmd, cli))
+		story.WriteStory("new", cli)
+		new.New(cmd, cli)
 	},
 }
 

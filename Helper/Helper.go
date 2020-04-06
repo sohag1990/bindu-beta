@@ -253,7 +253,6 @@ func PropertyFormatter(prop string) string {
 func ErrorCheck(e error) {
 	if e != nil {
 		fmt.Println(e)
-		// panic(e)
 	}
 }
 
