@@ -97,6 +97,11 @@ func Generator(cmd *cobra.Command, cli helper.CommandChain) bool {
 			// helper.AppendLinesInFile("routes/API.go", lineAfter, newLines)
 		}
 
+	} else {
+
+		fmt.Println("Error: Incorrect arguments, Do you meen? 'bindu generate model " + args[0] + "...'")
+		fmt.Println("Available arguments: ", genItems)
+		story.UpdateThisStoryStatus("False: incorrect command, Missing argument")
 	}
 	return status
 }
@@ -119,8 +124,9 @@ func ModelGenerator(cmd *cobra.Command, cli helper.CommandChain) bool {
 	// check if the file exist. if exist then suggest to change the command update instead generate
 	if helper.FileExists(fp) {
 		// check if genarator should update or modify files
+		fmt.Println("Model already exist...")
 		if !u {
-			fmt.Println("Model already exist. If you want to update model,\nuse the --update or -u flag to add new or modify")
+			fmt.Println("If you want to update model,\nuse the --update(-u)  flag to modify")
 			story.UpdateThisStoryStatus("false: '" + modelName + "' Model Already exist!")
 			return false
 		}
