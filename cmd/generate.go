@@ -49,11 +49,9 @@ to quickly create a Cobra application.`,
 			{Key: "middleware", Values: []string{fmt.Sprintf("%v", cmd.Flag("middleware").Value)}},
 			{Key: "group", Values: []string{fmt.Sprintf("%v", cmd.Flag("group").Value)}},
 		}
-
 		// setter of cli to get from other page
 
 		cli.SetCli(args, flags)
-
 		// Story writter
 		// if the command execute return true,
 		// so the story can know that command was success or failed

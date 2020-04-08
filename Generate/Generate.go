@@ -30,6 +30,10 @@ func Generator(cmd *cobra.Command, cli helper.CommandChain) bool {
 	genItems := []string{"Model", "Controller", "Scaffold", "Routes", "View", "Auth"}
 	// if no agruments Prompt to select action name eg. model, controller, scaffold, view
 	if len(args) == 0 {
+		fmt.Println("Arguments not enough to generate Model, Controller, Scaffold, Routes, View or Auth")
+		story.UpdateThisStoryStatus("false: No enough agruments for generate command")
+		return false
+		//user simulation fix letter
 		_, actionName := helper.AskSelect("Select To Generate", genItems)
 		args = append(args, actionName)
 		cli.SetCliArgs(args)
@@ -106,23 +110,12 @@ func ModelGenerator(cmd *cobra.Command, cli helper.CommandChain) bool {
 
 	plural := pluralize.NewClient()
 	modelName := args[1]
-	// if modelName == "User" {
-	// 	userNameExist := false
-	// 	for _, a := range args {
-	// 		if a == "UserName:string" {
-	// 			userNameExist = true
-	// 		}
-	// 	}
-	// 	if !userNameExist {
-	// 		args = append(args, "UserName:string")
-	// 	}
-	// }
 
 	// if directory not present create models dir
 	newpath := filepath.Join(".", "app/models")
 	os.MkdirAll(newpath, os.ModePerm)
 	//file path of the model
-	fp := "./app/models/" + modelName + ".go"
+	fp := "./app/models/" + strings.Title(modelName) + ".go"
 	// check if the file exist. if exist then suggest to change the command update instead generate
 	if helper.FileExists(fp) {
 		// check if genarator should update or modify files
