@@ -243,7 +243,7 @@ type Property struct {
 func PropertyFormatter(prop string) string {
 	p := strings.Split(prop, ":")
 	if len(p) >= 2 {
-		return "\t" + p[0] + "\t\t" + strings.ToLower(p[1])
+		return "\t" + strings.Title(p[0]) + "\t\t" + strings.ToLower(p[1])
 	}
 
 	return ""
