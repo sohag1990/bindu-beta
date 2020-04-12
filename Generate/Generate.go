@@ -156,27 +156,38 @@ func ModelGenerator(cmd *cobra.Command, cli helper.CommandChain) bool {
 		if len(subcommandChain) > 0 {
 			// flags arguments commandChain first item is relationship model
 			relModel := subcommandChain[0]
+			// check if more than one rel models
+			splitRelModel := strings.Split(relModel, "-")
+
+			for in, makeTitle := range splitRelModel {
+				splitRelModel[in] = strings.Title(makeTitle)
+			}
 			if keyFlag == "hasOne" {
-				// append new lines to the main model
-				helper.AppendLinesInFile(fp, lineAfter, []string{"\t" + relModel + " " + relModel})
-				// create related hasOne model
-				status = modelIfNotExistCreate(relModel, []string{"\t" + args[1] + "ID uint64 `json:\"-\"`"})
+
+				for _, rModel := range splitRelModel {
+					// append new lines to the main model
+					helper.AppendLinesInFile(fp, lineAfter, []string{"\t" + rModel + " " + rModel})
+					// create related hasOne model
+					status = modelIfNotExistCreate(rModel, []string{"\t" + strings.Title(args[1]) + "ID uint64 `json:\"-\"`"})
+				}
 			}
 			if keyFlag == "belongsTo" {
-				// belongs to properties for main model
-				belongsToProps := []string{
-					"\t" + relModel + " " + relModel,
-					"\t" + relModel + "ID   uint64 `json:\"-\"`",
+
+				for _, rModel := range splitRelModel {
+					// belongs to properties for main model
+					belongsToProps := []string{
+						"\t" + rModel + " " + rModel,
+						"\t" + rModel + "ID   uint64 `json:\"-\"`",
+					}
+					// append line to main model
+					helper.AppendLinesInFile(fp, lineAfter, belongsToProps)
+					// belongs to model
+					status = modelIfNotExistCreate(rModel, nil)
 				}
-				// append line to main model
-				helper.AppendLinesInFile(fp, lineAfter, belongsToProps)
-				// belongs to model
-				status = modelIfNotExistCreate(relModel, nil)
 			}
 			if keyFlag == "hasMany" {
 				// hasMany properties for main model
-				// check if more than one
-				splitRelModel := strings.Split(relModel, "-")
+
 				for _, rModel := range splitRelModel {
 					hasManyProps := []string{
 						"\t" + plural.Plural(rModel) + " []" + rModel,
@@ -184,21 +195,23 @@ func ModelGenerator(cmd *cobra.Command, cli helper.CommandChain) bool {
 					// append line to main model
 					helper.AppendLinesInFile(fp, lineAfter, hasManyProps)
 					// belongs to model
-					status = modelIfNotExistCreate(rModel, []string{"\t" + modelName + "ID   uint64 `json:\"-\"`"})
+					status = modelIfNotExistCreate(rModel, []string{"\t" + strings.Title(modelName) + "ID   uint64 `json:\"-\"`"})
 				}
 
 			}
 			if keyFlag == "manyToMany" {
-				// manyToMany properties for main model
-				manyToManyProps := []string{
-					"\t" + plural.Plural(relModel) + " []" + relModel + " `gorm:\"many2many:" + strings.ToLower(args[1]) + "_" + plural.Plural(strings.ToLower(relModel)) + ";association_foreignkey:id;foreignkey:id\"`",
-				}
-				// append line to main model
-				helper.AppendLinesInFile(fp, lineAfter, manyToManyProps)
-				// Crate manyToMany model if not exist
-				// manyToMany Relationship
-				status = modelIfNotExistCreate(relModel, []string{"\t" + plural.Plural(args[1]) + " []" + args[1] + " `gorm:\"many2many:" + strings.ToLower(args[1]) + "_" + plural.Plural(strings.ToLower(relModel)) + ";association_foreignkey:id;foreignkey:id\"`\n"})
 
+				for _, rModel := range splitRelModel {
+					// manyToMany properties for main model
+					manyToManyProps := []string{
+						"\t" + plural.Plural(rModel) + " []" + rModel + " `gorm:\"many2many:" + strings.ToLower(args[1]) + "_" + plural.Plural(strings.ToLower(rModel)) + ";association_foreignkey:id;foreignkey:id\"`",
+					}
+					// append line to main model
+					helper.AppendLinesInFile(fp, lineAfter, manyToManyProps)
+					// Crate manyToMany model if not exist
+					// manyToMany Relationship
+					status = modelIfNotExistCreate(rModel, []string{"\t" + strings.Title(plural.Plural(args[1])) + " []" + args[1] + " `gorm:\"many2many:" + strings.ToLower(args[1]) + "_" + plural.Plural(strings.ToLower(rModel)) + ";association_foreignkey:id;foreignkey:id\"`\n"})
+				}
 			}
 		}
 	}
