@@ -240,10 +240,30 @@ type Property struct {
 }
 
 // PropertyFormatter formate the correct property and type
+// Gorm attributes(index, varchar(255) unique_index, null, not null, default 0) json:"-"
 func PropertyFormatter(prop string) string {
 	p := strings.Split(prop, ":")
 	if len(p) >= 2 {
-		return "\t" + strings.Title(p[0]) + "\t\t" + strings.ToLower(p[1])
+
+		pVal := strings.ToLower(p[1])
+		pValLimit := strings.Split(pVal, "_")
+
+		if len(pValLimit) > 1 {
+			if pValLimit[0] == "text" {
+				pVal = "string" + "\t\t" + "`gorm:\"type:text;\"`"
+			} else if pValLimit[0] == "string" {
+				pVal = "string" + "\t\t" + "`gorm:\"type:varchar(" + pValLimit[1] + ");\"`"
+			}
+		} else {
+			if pVal == "text" {
+				pVal = "string" + "\t\t" + "`gorm:\"type:text;\"`"
+			} else if pVal == "time" || pVal == "date" || pVal == "date" || pVal == "datetime" || pVal == "time.Time" {
+				pVal = "time.Time"
+
+			}
+		}
+
+		return "\t" + strings.Title(p[0]) + "\t\t" + pVal
 	}
 
 	return ""
