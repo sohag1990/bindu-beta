@@ -4,6 +4,7 @@ Simple api development go framework top on gin
 bindu new  --app Blank --port 8080 #true
 
 bindu new Hello –app Blank –db 'AdapterName:HostName:Port:DbName:DbUserName:DbPass' –port 8080
+
 bindu new Hello –app blank –port 9999 –db Mysql:Localhost:3306:blog:root
 
 
@@ -11,7 +12,9 @@ bindu new Hello –app blank –port 9999 –db Mysql:Localhost:3306:blog:root
 bindu generate Help #true
 
 bindu generate Scaffold User Email:String UserName:String Phone:String --hasOne Profile 
+
 bindu generate Model Profile FirstName:String LastName:String Image:String  
+
 bindu generate Controller Profile FirstName:String LastName:String Image:String  
 
 bindu generate Scaffold Item Location:String Type:String Image:String Title:String Date:String 
@@ -70,22 +73,34 @@ Draft
 bindu generate model User name:string, title:string_512 bio:text –hasMany posts:postID –hasOne address-profile
 
 bindu generate controller User –methods all
+
 bindu generate controller Profile –methods get-post-put-delete
+
 bindu generate scaffold User name:string, title:string –hasMany posts –hasOne address
+
 bindu generate routes User
 
 // update
+
 bindu update model User name:string, title:string –hasMany posts –hasOne address
+
 bindu update controller User
+
 bindu update scaffold User name:string, title:string –hasMany posts –hasOne address
+
 bindu update routes User
+
 // important
 bindu generate routes User -g=v1 -m=auth
 
 
+
 // Create
+
 bindu create user username:Sohag, password:11111 role:admin // admin must be in smallcase
+
 bindu create Policy alice:p, sub:Admin, obj:/api/*, act:*
+
 bindu create Policy alice:p, sub:editor, obj:/api/v2/ping/*, act:*
 
 // Modify
