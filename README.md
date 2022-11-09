@@ -1,6 +1,8 @@
 # bindu-beta
 Simple api development go framework top on gin
+
 bindu new  --app Blank --port 8080 #true
+
 bindu new Hello –app Blank –db 'AdapterName:HostName:Port:DbName:DbUserName:DbPass' –port 8080
 bindu new Hello –app blank –port 9999 –db Mysql:Localhost:3306:blog:root
 
